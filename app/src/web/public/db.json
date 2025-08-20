@@ -1,14 +1,18 @@
 {
   "userPreferences": {
     "selectedSports": [
-      "basketball",
       "tennis",
-      "rugby"
+      "basketball"
     ],
-    "selectedTeams": [],
+    "selectedTeams": [
+      "138295",
+      "135808"
+    ],
     "selectedEvents": [],
     "selectedLeagues": [
-      "4831"
+      "4831",
+      "4464",
+      "5347"
     ]
   },
   "availableSports": [],

@@ -149,10 +149,20 @@ class SportsEventsDashboard {
             return dateB - dateA;
         });
 
-        // Create event cards
-        sortedEvents.forEach(event => {
-            const eventCard = this.createEventCard(event);
-            eventsGrid.appendChild(eventCard);
+        // Group events by sport
+        const groupedEvents = this.groupEventsBySport(sortedEvents);
+
+        // Create sport groups and event cards
+        Object.keys(groupedEvents).forEach(sport => {
+            const sportEvents = groupedEvents[sport];
+            
+            // Create sport group header
+            const sportGroup = this.createSportGroup(sport, sportEvents);
+            eventsGrid.appendChild(sportGroup);
+            
+            // Create events grid for this sport
+            const sportEventsGrid = this.createSportEventsGrid(sportEvents);
+            eventsGrid.appendChild(sportEventsGrid);
         });
 
         eventsSection.style.display = 'block';
@@ -230,6 +240,109 @@ class SportsEventsDashboard {
         return card;
     }
 
+    groupEventsBySport(events) {
+        const groups = {};
+        
+        events.forEach(event => {
+            const sport = this.detectSportFromEvent(event);
+            if (!groups[sport]) {
+                groups[sport] = [];
+            }
+            groups[sport].push(event);
+        });
+        
+        return groups;
+    }
+
+    detectSportFromEvent(event) {
+        // Try to detect sport from league name or event data
+        const league = (event.league || '').toLowerCase();
+        const eventName = (event.name || '').toLowerCase();
+        
+        // Common sport patterns
+        if (league.includes('soccer') || league.includes('football') && !league.includes('american') || 
+            league.includes('premier') || league.includes('champions') || league.includes('fifa') ||
+            league.includes('uefa') || eventName.includes('vs') && league.includes('fc')) {
+            return 'Soccer';
+        }
+        
+        if (league.includes('basketball') || league.includes('nba') || league.includes('wnba') ||
+            league.includes('euroleague') || league.includes('ncaa basketball')) {
+            return 'Basketball';
+        }
+        
+        if (league.includes('american football') || league.includes('nfl') || league.includes('ncaa football')) {
+            return 'American Football';
+        }
+        
+        if (league.includes('baseball') || league.includes('mlb') || league.includes('world series')) {
+            return 'Baseball';
+        }
+        
+        if (league.includes('hockey') || league.includes('nhl') || league.includes('ice hockey')) {
+            return 'Ice Hockey';
+        }
+        
+        if (league.includes('tennis') || league.includes('atp') || league.includes('wta') ||
+            league.includes('wimbledon') || league.includes('us open') || league.includes('french open')) {
+            return 'Tennis';
+        }
+        
+        if (league.includes('rugby') || league.includes('union') || league.includes('league')) {
+            return 'Rugby';
+        }
+        
+        // Default to the league name or 'Other Sports' if we can't detect
+        return event.league || 'Other Sports';
+    }
+
+    getSportIcon(sport) {
+        const icons = {
+            'Soccer': '⚽',
+            'Basketball': '🏀',
+            'American Football': '🏈',
+            'Baseball': '⚾',
+            'Ice Hockey': '🏒',
+            'Tennis': '🎾',
+            'Rugby': '🏉',
+            'Golf': '⛳',
+            'Boxing': '🥊',
+            'Swimming': '🏊',
+            'Athletics': '🏃',
+            'Cycling': '🚴',
+            'Other Sports': '🏅'
+        };
+        
+        return icons[sport] || '🏅';
+    }
+
+    createSportGroup(sport, events) {
+        const sportGroup = document.createElement('div');
+        sportGroup.className = 'sport-group';
+        
+        sportGroup.innerHTML = `
+            <div class="sport-group-header">
+                <span class="sport-icon">${this.getSportIcon(sport)}</span>
+                <h3>${sport}</h3>
+                <span class="event-count">${events.length} event${events.length !== 1 ? 's' : ''}</span>
+            </div>
+        `;
+        
+        return sportGroup;
+    }
+
+    createSportEventsGrid(events) {
+        const sportEventsGrid = document.createElement('div');
+        sportEventsGrid.className = `sport-events-grid${this.currentView === 'list' ? ' list-view' : ''}`;
+        
+        events.forEach(event => {
+            const eventCard = this.createEventCard(event);
+            sportEventsGrid.appendChild(eventCard);
+        });
+        
+        return sportEventsGrid;
+    }
+
     showStats(events) {
         const statsSection = document.getElementById('stats-section');
         const totalEvents = document.getElementById('total-events');
@@ -257,6 +370,7 @@ class SportsEventsDashboard {
         const gridBtn = document.getElementById('grid-view');
         const listBtn = document.getElementById('list-view');
 
+        // Update main events grid
         if (view === 'grid') {
             eventsGrid.classList.remove('list-view');
             gridBtn.classList.add('active');
@@ -266,6 +380,16 @@ class SportsEventsDashboard {
             listBtn.classList.add('active');
             gridBtn.classList.remove('active');
         }
+
+        // Update all sport events grids
+        const sportEventsGrids = document.querySelectorAll('.sport-events-grid');
+        sportEventsGrids.forEach(grid => {
+            if (view === 'grid') {
+                grid.classList.remove('list-view');
+            } else {
+                grid.classList.add('list-view');
+            }
+        });
     }
 
     showLoading(message = 'Loading...') {
@@ -399,10 +523,20 @@ class SportsEventsDashboard {
             return dateB - dateA;
         });
 
-        // Create event cards
-        sortedEvents.forEach(event => {
-            const eventCard = this.createEventCard(event);
-            eventsGrid.appendChild(eventCard);
+        // Group events by sport
+        const groupedEvents = this.groupEventsBySport(sortedEvents);
+
+        // Create sport groups and event cards
+        Object.keys(groupedEvents).forEach(sport => {
+            const sportEvents = groupedEvents[sport];
+            
+            // Create sport group header
+            const sportGroup = this.createSportGroup(sport, sportEvents);
+            eventsGrid.appendChild(sportGroup);
+            
+            // Create events grid for this sport
+            const sportEventsGrid = this.createSportEventsGrid(sportEvents);
+            eventsGrid.appendChild(sportEventsGrid);
         });
 
         eventsSection.style.display = 'block';

@@ -4,3 +4,22 @@
 4. Store them in a postgres database.
 5. for the ones selected by the user, add them to a Google Calendar.
 6. Using an Google ADK and an AI Agent of Gemini model, include in the description, a summary with links of news about the event, specially youtube videos with the highlights of the past match of the involved teams or individual players. 
+
+
+7.requerimientos fili y tizi ✅ COMPLETED
+- in the preferences page:
+  ✅ add filters (by sport and status)
+  ✅ add expand/collapse sections in the preferences page  
+  ✅ display the teams, based on the selected sports. and keep the search for teams as an additional option
+  
+IMPLEMENTED FEATURES:
+- Filters Section: Filter by sport and selection status
+- Collapsible Sections: All sections can be expanded/collapsed
+- Auto Team Display: Teams automatically shown based on selected sports
+- Enhanced Search: Additional team search functionality maintained
+- ESPN Design: Dark theme with ESPN red accents for better UX
+
+8. requerimientos Thursday 21
+- fix tenis
+- db per user
+

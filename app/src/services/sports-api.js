@@ -244,6 +244,123 @@ class SportsEventsAPI {
             };
         }
     }
+
+    /**
+     * Get teams by sport - uses league-based approach
+     * @param {string} sportName - The sport name to get teams for
+     * @returns {Promise<Object>} Teams data
+     */
+    async getTeamsBySport(sportName) {
+        try {
+            console.log(`Getting teams for sport: ${sportName}`);
+            
+            // First get leagues for this sport
+            const leaguesResult = await this.getLeaguesBySport(sportName);
+            
+            if (!leaguesResult.success || leaguesResult.leagues.length === 0) {
+                return {
+                    success: false,
+                    message: `No leagues found for sport: ${sportName}`,
+                    teams: []
+                };
+            }
+
+            // Get teams from the first few leagues (limit to avoid too many API calls)
+            const leagues = leaguesResult.leagues.slice(0, 3); // Limit to first 3 leagues
+            const teamsPromises = leagues.map(league => this.getTeamsByLeague(league.idLeague));
+            
+            const teamsResults = await Promise.all(teamsPromises);
+            
+            // Combine all teams from all leagues
+            let allTeams = [];
+            teamsResults.forEach(result => {
+                if (result.success && result.teams) {
+                    allTeams = allTeams.concat(result.teams);
+                }
+            });
+
+            // Remove duplicates based on team ID
+            const uniqueTeams = allTeams.filter((team, index, self) => 
+                index === self.findIndex(t => t.idTeam === team.idTeam)
+            );
+
+            return {
+                success: true,
+                teams: uniqueTeams,
+                count: uniqueTeams.length
+            };
+
+        } catch (error) {
+            console.error('Error getting teams by sport:', error.message);
+            return {
+                success: false,
+                message: `Error getting teams by sport: ${error.message}`,
+                teams: []
+            };
+        }
+    }
+
+    /**
+     * Get teams by league (using league name since search_all_teams requires league name not ID)
+     * @param {string} leagueId - The league ID
+     * @returns {Promise<Object>} Teams data
+     */
+    async getTeamsByLeague(leagueId) {
+        try {
+            // First, get the league info to find the league name
+            const leagueUrl = `${this.baseURL}/lookupleague.php?id=${leagueId}`;
+            console.log(`Getting league info for ID: ${leagueId}`);
+            
+            const leagueResponse = await axios.get(leagueUrl, {
+                timeout: 30000,
+                headers: {
+                    'User-Agent': 'Sports-Events-System/1.0'
+                }
+            });
+
+            if (!leagueResponse.data || !leagueResponse.data.leagues || leagueResponse.data.leagues.length === 0) {
+                return {
+                    success: false,
+                    message: 'League not found',
+                    teams: []
+                };
+            }
+
+            const leagueName = leagueResponse.data.leagues[0].strLeague;
+            console.log(`Getting teams for league: ${leagueName}`);
+
+            // Now get teams using the league name
+            const teamsUrl = `${this.baseURL}/search_all_teams.php?l=${encodeURIComponent(leagueName)}`;
+            
+            const teamsResponse = await axios.get(teamsUrl, {
+                timeout: 30000,
+                headers: {
+                    'User-Agent': 'Sports-Events-System/1.0'
+                }
+            });
+
+            if (teamsResponse.data && teamsResponse.data.teams) {
+                return {
+                    success: true,
+                    teams: teamsResponse.data.teams,
+                    count: teamsResponse.data.teams.length
+                };
+            } else {
+                return {
+                    success: false,
+                    message: 'No teams found for this league',
+                    teams: []
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching teams by league:', error.message);
+            return {
+                success: false,
+                message: `Error fetching teams by league: ${error.message}`,
+                teams: []
+            };
+        }
+    }
 }
 
 module.exports = SportsEventsAPI;

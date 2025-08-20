@@ -382,6 +382,23 @@ class SportsEventsServer {
             }
         });
 
+        // API endpoint to get teams by sport (Fili y Tizi requirement)
+        this.app.get('/api/teams/sport/:sportName', async (req, res) => {
+            try {
+                const sportName = req.params.sportName;
+                console.log(`Getting teams for sport: ${sportName}`);
+                const result = await this.sportsAPI.getTeamsBySport(sportName);
+                res.json(result);
+            } catch (error) {
+                console.error('Error getting teams by sport:', error);
+                res.status(500).json({ 
+                    success: false, 
+                    message: 'Error getting teams by sport',
+                    error: error.message 
+                });
+            }
+        });
+
         // API endpoint to get formatted event data
         this.app.post('/api/events/format', async (req, res) => {
             try {

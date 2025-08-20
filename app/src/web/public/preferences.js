@@ -43,6 +43,28 @@ class PreferencesManager {
                 this.handleLogout();
             });
         }
+
+        // Fili y Tizi Requirements - New Event Handlers
+        
+        // Filters functionality
+        document.getElementById('sport-filter').addEventListener('change', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('status-filter').addEventListener('change', () => {
+            this.applyFilters();
+        });
+
+        document.getElementById('clear-filters-btn').addEventListener('click', () => {
+            this.clearFilters();
+        });
+
+        // Collapsible sections
+        document.querySelectorAll('.section-header.clickable').forEach(header => {
+            header.addEventListener('click', (e) => {
+                this.toggleSection(e.currentTarget.dataset.section);
+            });
+        });
     }
 
     async loadPreferences() {
@@ -121,6 +143,7 @@ class PreferencesManager {
             sportElement.addEventListener('click', () => {
                 this.toggleSportSelection(sport.id);
                 this.updateLeaguesDisplay();
+                this.updateTeamsFromSports();
             });
 
             sportsGrid.appendChild(sportElement);
@@ -586,10 +609,327 @@ class PreferencesManager {
             this.showError('Logout failed. Please try again.');
         }
     }
+
+    // FILI Y TIZI REQUIREMENTS - New Methods
+
+    // Filters functionality
+    populateFilterOptions() {
+        const sportFilter = document.getElementById('sport-filter');
+        
+        // Clear existing options (except "All Sports")
+        sportFilter.innerHTML = '<option value="">All Sports</option>';
+        
+        // Add available sports as filter options
+        this.availableSports.forEach(sport => {
+            const option = document.createElement('option');
+            option.value = sport.id;
+            option.textContent = sport.name;
+            sportFilter.appendChild(option);
+        });
+    }
+
+    applyFilters() {
+        const sportFilter = document.getElementById('sport-filter').value;
+        const statusFilter = document.getElementById('status-filter').value;
+
+        // Filter sports
+        this.filterSports(sportFilter, statusFilter);
+        
+        // Filter teams 
+        this.filterTeams(sportFilter, statusFilter);
+        
+        // Filter leagues
+        this.filterLeagues(sportFilter, statusFilter);
+    }
+
+    filterSports(sportFilter, statusFilter) {
+        const sportsGrid = document.getElementById('sports-grid');
+        const sportCards = sportsGrid.querySelectorAll('.selectable-item');
+        
+        sportCards.forEach(card => {
+            const sportId = card.dataset.id;
+            const isSelected = card.classList.contains('selected');
+            
+            let showCard = true;
+            
+            // Apply sport filter
+            if (sportFilter && sportId !== sportFilter) {
+                showCard = false;
+            }
+            
+            // Apply status filter
+            if (statusFilter === 'selected' && !isSelected) {
+                showCard = false;
+            } else if (statusFilter === 'available' && isSelected) {
+                showCard = false;
+            }
+            
+            card.style.display = showCard ? 'block' : 'none';
+        });
+    }
+
+    filterTeams(sportFilter, statusFilter) {
+        const teamsGrid = document.getElementById('teams-from-sports');
+        const teamCards = teamsGrid.querySelectorAll('.team-card');
+        
+        teamCards.forEach(card => {
+            const isSelected = card.classList.contains('selected');
+            
+            let showCard = true;
+            
+            // Apply status filter
+            if (statusFilter === 'selected' && !isSelected) {
+                showCard = false;
+            } else if (statusFilter === 'available' && isSelected) {
+                showCard = false;
+            }
+            
+            card.style.display = showCard ? 'block' : 'none';
+        });
+    }
+
+    filterLeagues(sportFilter, statusFilter) {
+        const leaguesGrid = document.getElementById('leagues-grid');
+        const leagueCards = leaguesGrid.querySelectorAll('.league-card');
+        
+        leagueCards.forEach(card => {
+            const isSelected = card.classList.contains('selected');
+            
+            let showCard = true;
+            
+            // Apply status filter
+            if (statusFilter === 'selected' && !isSelected) {
+                showCard = false;
+            } else if (statusFilter === 'available' && isSelected) {
+                showCard = false;
+            }
+            
+            card.style.display = showCard ? 'block' : 'none';
+        });
+    }
+
+    clearFilters() {
+        document.getElementById('sport-filter').value = '';
+        document.getElementById('status-filter').value = '';
+        
+        // Show all items
+        document.querySelectorAll('.selectable-item, .team-card, .league-card').forEach(item => {
+            item.style.display = 'block';
+        });
+    }
+
+    // Collapsible sections functionality
+    toggleSection(sectionName) {
+        const section = document.querySelector(`[data-section="${sectionName}"]`).closest('.collapsible-section');
+        const isCollapsed = section.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            section.classList.remove('collapsed');
+        } else {
+            section.classList.add('collapsed');
+        }
+    }
+
+    // Teams from selected sports functionality
+    async updateTeamsFromSports() {
+        const teamsFromSportsGrid = document.getElementById('teams-from-sports');
+        teamsFromSportsGrid.innerHTML = '';
+
+        if (this.selectedSports.size === 0) {
+            teamsFromSportsGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-futbol"></i>
+                    <h3>Select sports first</h3>
+                    <p>Choose sports above to see teams automatically</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.showLoading('Loading teams from your selected sports...');
+
+        try {
+            // Get teams for each selected sport
+            const teamsPromises = Array.from(this.selectedSports).map(async (sportId) => {
+                const sport = this.availableSports.find(s => s.id === sportId);
+                const sportName = sport ? sport.originalName || sport.name : sportId;
+                
+                try {
+                    console.log(`Fetching teams for sport: ${sportName}`);
+                    const response = await fetch(`/api/teams/sport/${encodeURIComponent(sportName)}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`Teams response for ${sportName}:`, data);
+                        
+                        if (data.success && data.teams && data.teams.length > 0) {
+                            return data.teams;
+                        } else {
+                            console.log(`No teams found for ${sportName}: ${data.message}`);
+                            return [];
+                        }
+                    } else {
+                        console.error(`Failed to fetch teams for ${sportName}: ${response.status}`);
+                        return [];
+                    }
+                } catch (error) {
+                    console.error(`Error fetching teams for ${sportName}:`, error);
+                    return [];
+                }
+            });
+
+            const allTeams = await Promise.all(teamsPromises);
+            const flatTeams = allTeams.flat();
+
+            this.hideLoading();
+
+            console.log(`Total teams found: ${flatTeams.length}`);
+
+            if (flatTeams.length === 0) {
+                // Show a more helpful message when no teams are found
+                const selectedSportsNames = Array.from(this.selectedSports).map(sportId => {
+                    const sport = this.availableSports.find(s => s.id === sportId);
+                    return sport ? sport.name : sportId;
+                }).join(', ');
+
+                teamsFromSportsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Loading teams...</h3>
+                        <p>We're looking for teams in: ${selectedSportsNames}</p>
+                        <p>This may take a moment as we search through leagues.</p>
+                        <div class="retry-section">
+                            <button class="btn btn-secondary" onclick="window.preferencesManager.updateTeamsFromSports()">
+                                <i class="fas fa-refresh"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Remove duplicates and sort
+            const uniqueTeams = flatTeams.filter((team, index, self) => 
+                index === self.findIndex(t => t.idTeam === team.idTeam)
+            ).sort((a, b) => a.strTeam.localeCompare(b.strTeam));
+
+            console.log(`Rendering ${uniqueTeams.length} unique teams`);
+
+            uniqueTeams.forEach(team => {
+                const teamElement = this.createTeamCard(team);
+                teamElement.addEventListener('click', () => {
+                    this.toggleTeamSelection(team);
+                });
+                teamsFromSportsGrid.appendChild(teamElement);
+            });
+
+        } catch (error) {
+            this.hideLoading();
+            console.error('Error loading teams from sports:', error);
+            teamsFromSportsGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error loading teams</h3>
+                    <p>Unable to load teams for selected sports. Please check your connection and try again.</p>
+                    <div class="retry-section">
+                        <button class="btn btn-secondary" onclick="window.preferencesManager.updateTeamsFromSports()">
+                            <i class="fas fa-refresh"></i> Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Enhanced search functionality (now for additional teams)
+    async searchTeams() {
+        const searchTerm = document.getElementById('team-search').value.trim();
+        const resultsContainer = document.getElementById('teams-search-results');
+
+        if (!searchTerm) {
+            this.showError('Please enter a team name to search');
+            return;
+        }
+
+        this.showLoading('Searching for additional teams...');
+        resultsContainer.innerHTML = '';
+
+        try {
+            const response = await fetch(`/api/teams/search/${encodeURIComponent(searchTerm)}`);
+            const data = await response.json();
+
+            this.hideLoading();
+
+            if (data.success && data.teams && data.teams.length > 0) {
+                data.teams.forEach(team => {
+                    const teamElement = this.createTeamCard(team);
+                    teamElement.addEventListener('click', () => {
+                        this.toggleTeamSelection(team);
+                    });
+                    resultsContainer.appendChild(teamElement);
+                });
+            } else {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No additional teams found</h3>
+                        <p>Try searching with different keywords</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            this.hideLoading();
+            this.showError('Error searching for additional teams: ' + error.message);
+        }
+    }
+
+    // Override the renderSports method to populate filters
+    renderSports() {
+        const sportsGrid = document.getElementById('sports-grid');
+        sportsGrid.innerHTML = '';
+
+        console.log('Rendering sports:', this.availableSports.length, 'sports available');
+
+        if (this.availableSports.length === 0) {
+            sportsGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>No sports available</h3>
+                    <p>Unable to load sports from the API</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.availableSports.forEach((sport, index) => {
+            const sportElement = this.createSelectableItem(
+                sport.id,
+                sport.icon,
+                sport.name,
+                'Select to follow this sport',
+                this.selectedSports.has(sport.id)
+            );
+
+            sportElement.addEventListener('click', () => {
+                this.toggleSportSelection(sport.id);
+                this.updateLeaguesDisplay();
+                this.updateTeamsFromSports();
+            });
+
+            sportsGrid.appendChild(sportElement);
+        });
+
+        // Populate filter options after rendering sports
+        this.populateFilterOptions();
+        
+        // Update leagues and teams display after rendering sports
+        this.updateLeaguesDisplay();
+        this.updateTeamsFromSports();
+    }
 }
 
 // Initialize the preferences manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new PreferencesManager();
+    window.preferencesManager = new PreferencesManager();
     console.log('🔧 Sports Preferences Manager initialized');
 });

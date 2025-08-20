@@ -385,6 +385,63 @@ select:hover {
     grid-template-columns: 1fr;
 }
 
+/* Sport Group Styles */
+.sport-group {
+    grid-column: 1 / -1;
+    margin: 2rem 0 1rem 0;
+}
+
+.sport-group:first-child {
+    margin-top: 0;
+}
+
+.sport-group-header {
+    background: linear-gradient(135deg, #ff0033, #cc0029);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(255, 0, 51, 0.3);
+    border: 2px solid #ff0033;
+}
+
+.sport-group-header h3 {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.sport-group-header .sport-icon {
+    font-size: 1.8rem;
+    color: #ffffff;
+}
+
+.sport-group-header .event-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+.sport-events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    grid-column: 1 / -1;
+}
+
+.sport-events-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
 .event-card {
     background: #262626;
     border-radius: 8px;
@@ -694,6 +751,23 @@ select:hover {
     .event-card {
         padding: 1rem;
     }
+    
+    .sport-events-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sport-group-header {
+        padding: 0.75rem 1rem;
+        flex-direction: row;
+    }
+    
+    .sport-group-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .sport-group-header .sport-icon {
+        font-size: 1.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -727,5 +801,22 @@ select:hover {
     
     .stat-content p {
         font-size: 0.85rem;
+    }
+    
+    .sport-group-header {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .sport-group-header h3 {
+        font-size: 1rem;
+    }
+    
+    .sport-group-header .sport-icon {
+        font-size: 1.25rem;
+    }
+    
+    .sport-group-header .event-count {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.6rem;
     }
 }
