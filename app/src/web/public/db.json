@@ -1,0 +1,18 @@
+{
+  "userPreferences": {
+    "selectedSports": [
+      "basketball",
+      "tennis",
+      "rugby"
+    ],
+    "selectedTeams": [],
+    "selectedEvents": [],
+    "selectedLeagues": [
+      "4831"
+    ]
+  },
+  "availableSports": [],
+  "teams": [],
+  "events": [],
+  "leagues": []
+}

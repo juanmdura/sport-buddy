@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sports Buddy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <!-- Header -->
+        <header class="login-header">
+            <div class="login-logo">
+                <i class="fas fa-trophy"></i>
+                <h1>Sports Buddy</h1>
+            </div>
+            <p class="login-subtitle">Your personalized sports experience</p>
+        </header>
+
+        <!-- Login Form -->
+        <main class="login-main">
+            <div class="login-card">
+                <div class="login-card-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> Welcome Back</h2>
+                    <p>Sign in to access your sports preferences</p>
+                </div>
+
+                <!-- Error/Success Messages -->
+                <div id="login-error" class="login-message error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="login-error-text"></span>
+                </div>
+
+                <div id="login-success" class="login-message success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="login-success-text"></span>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="login-loading" class="login-loading" style="display: none;">
+                    <div class="login-spinner"></div>
+                    <p>Signing you in...</p>
+                </div>
+
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i> Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required 
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required 
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                            >
+                            <button type="button" class="toggle-password" id="toggle-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember-me" name="remember">
+                            <span class="checkmark"></span>
+                            Remember me for 30 days
+                        </label>
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Demo Account Info -->
+                <div class="demo-account">
+                    <h4><i class="fas fa-info-circle"></i> Demo Account</h4>
+                    <p>Username: <strong>demo</strong></p>
+                    <p>Password: <strong>demo123</strong></p>
+                    <button type="button" id="demo-login" class="demo-btn">
+                        <i class="fas fa-rocket"></i> Try Demo
+                    </button>
+                </div>
+
+                <!-- Register Link -->
+                <div class="register-link">
+                    <p>Don't have an account? 
+                        <a href="/register" id="register-link">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="login-footer">
+            <p>&copy; 2024 Sports Buddy. Secure sports experience.</p>
+        </footer>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

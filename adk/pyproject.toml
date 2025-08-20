@@ -1,0 +1,10 @@
+[project]
+name = "sports-buddy"
+version = "0.1.0"
+description = "Sports buddy improves your sports events experience"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk",
+    "google-cloud-aiplatform[agent-engine]>=1.106.0",
+    "opik>=1.8.13",
+]

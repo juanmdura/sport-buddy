@@ -1,0 +1,6 @@
+1. using node.js, create a system that reads sport events from an API 
+2. display the events in a web page.
+3. allow the user to select the type of sport they want to be subscribed to.
+4. Store them in a postgres database.
+5. for the ones selected by the user, add them to a Google Calendar.
+6. Using an Google ADK and an AI Agent of Gemini model, include in the description, a summary with links of news about the event, specially youtube videos with the highlights of the past match of the involved teams or individual players. 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Events Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-trophy"></i> <span id="page-title">Sports Buddy</span></h1>
+                <p>Discover and track your favorite sports events</p>
+            </div>
+            <nav class="header-nav">
+                <div class="nav-left">
+                    <a href="index.html" class="nav-link active">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="preferences.html" class="nav-link">
+                        <i class="fas fa-cog"></i> Preferences
+                    </a>
+                </div>
+                <div class="nav-right">
+                    <div class="user-info" id="user-info" style="display: none;">
+                        <span class="user-name" id="user-name"></span>
+                        <button class="logout-btn" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-section">
+            <div class="nav-controls">
+                <div class="sport-selector">
+                    <label for="sport-select"><i class="fas fa-futbol"></i> Select Sport:</label>
+                    <select id="sport-select">
+                        <option value="">Choose a sport...</option>
+                        <option value="Soccer">⚽ Soccer</option>
+                        <option value="Basketball">🏀 Basketball</option>
+                        <option value="American Football">🏈 American Football</option>
+                        <option value="Baseball">⚾ Baseball</option>
+                        <option value="Ice Hockey">🏒 Ice Hockey</option>
+                        <option value="Tennis">🎾 Tennis</option>
+                    </select>
+                </div>
+                
+                <div class="league-selector" style="display: none;">
+                    <label for="league-select"><i class="fas fa-list"></i> Select League:</label>
+                    <select id="league-select">
+                        <option value="">Choose a league...</option>
+                    </select>
+                </div>
+                
+                <button id="load-events-btn" class="btn btn-primary" disabled>
+                    <i class="fas fa-search"></i> Load Events
+                </button>
+            </div>
+        </nav>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading sports events...</p>
+        </div>
+
+        <!-- Error Messages -->
+        <div id="error-message" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="error-text"></span>
+        </div>
+
+        <!-- Stats Section -->
+        <div id="stats-section" class="stats-section" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div class="stat-content">
+                        <h3 id="total-events">0</h3>
+                        <p>Total Events</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-trophy"></i>
+                    <div class="stat-content">
+                        <h3 id="completed-events">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-content">
+                        <h3 id="upcoming-events">0</h3>
+                        <p>Upcoming</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Grid -->
+        <main class="main-content">
+            <div id="events-section" class="events-section" style="display: none;">
+                <div class="section-header">
+                    <h2><i class="fas fa-calendar-check"></i> Events</h2>
+                    <div class="view-toggle">
+                        <button id="grid-view" class="view-btn active">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button id="list-view" class="view-btn">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="events-grid" class="events-grid">
+                    <!-- Events will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Welcome Section -->
+            <div id="welcome-section" class="welcome-section" style="display: none;">
+                <div class="welcome-content">
+                    <i class="fas fa-sports"></i>
+                    <h2>Welcome to Sports Events Dashboard</h2>
+                    <p>Set up your preferences to see personalized content, or browse all sports below</p>
+                    <div class="welcome-actions">
+                        <a href="preferences.html" class="btn btn-primary">
+                            <i class="fas fa-cog"></i> Set Preferences
+                        </a>
+                    </div>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-globe"></i>
+                            <span>Live Sports Data</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobile Responsive</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-lightning-bolt"></i>
+                            <span>Real-time Updates</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Sports Events Dashboard. Powered by TheSportsDB API.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
