@@ -1,18 +1,22 @@
 {
   "userPreferences": {
     "selectedSports": [
-      "tennis",
-      "basketball"
+      "soccer"
     ],
     "selectedTeams": [
-      "138295",
-      "135808"
+      {
+        "id": "133602",
+        "name": "Liverpool",
+        "sport": "Soccer"
+      }
     ],
     "selectedEvents": [],
     "selectedLeagues": [
-      "4831",
-      "4464",
-      "5347"
+      {
+        "id": "4328",
+        "name": "English Premier League",
+        "sport": "Soccer"
+      }
     ]
   },
   "availableSports": [],

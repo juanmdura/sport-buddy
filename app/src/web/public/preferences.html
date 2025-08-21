@@ -111,7 +111,7 @@
                 <div id="sports-content" class="section-content">
                     <div class="search-section">
                         <div class="search-input-container">
-                            <input type="text" id="sports-search" placeholder="Search sports..." class="search-input">
+                            <input type="text" id="sports-search" placeholder="Filter sports by name..." class="search-input">
                             <button id="clear-sports-search" class="clear-search-btn" style="display: none;">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -130,35 +130,19 @@
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div id="teams-content" class="section-content">
-                    <!-- Teams from Selected Sports -->
-                    <div class="teams-from-sports-section">
-                        <h3><i class="fas fa-star"></i> Teams from Your Selected Sports</h3>
+                    <!-- All Teams -->
+                    <div class="teams-section">
+                        <h3><i class="fas fa-users"></i> All Teams</h3>
                         <div class="search-section">
                             <div class="search-input-container">
-                                <input type="text" id="teams-search" placeholder="Search teams..." class="search-input">
+                                <input type="text" id="teams-search" placeholder="Filter teams by name..." class="search-input">
                                 <button id="clear-teams-search" class="clear-search-btn" style="display: none;">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
-                        <div id="teams-from-sports" class="selection-grid">
-                            <!-- Teams from selected sports will appear here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Additional Team Search -->
-                    <div class="additional-search-section">
-                        <h3><i class="fas fa-search"></i> Search for Additional Teams</h3>
-                        <div class="search-section">
-                            <div class="search-input-container">
-                                <input type="text" id="team-search" placeholder="Search for specific teams..." class="search-input">
-                                <button id="search-teams-btn" class="btn btn-secondary">
-                                    <i class="fas fa-search"></i> Search
-                                </button>
-                            </div>
-                        </div>
-                        <div id="teams-search-results" class="selection-grid">
-                            <!-- Team search results will appear here -->
+                        <div id="teams-grid" class="selection-grid">
+                            <!-- All teams will appear here -->
                         </div>
                     </div>
                     
@@ -174,20 +158,23 @@
             <!-- Leagues Selection -->
             <section class="preferences-section collapsible-section">
                 <div class="section-header clickable" data-section="leagues">
-                    <h2><i class="fas fa-trophy"></i> Select the leagues to follow based on your selected sports</h2>
+                    <h2><i class="fas fa-trophy"></i> Select Leagues</h2>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div id="leagues-content" class="section-content">
-                    <div class="search-section">
-                        <div class="search-input-container">
-                            <input type="text" id="leagues-search" placeholder="Search leagues..." class="search-input">
-                            <button id="clear-leagues-search" class="clear-search-btn" style="display: none;">
-                                <i class="fas fa-times"></i>
-                            </button>
+                    <div class="leagues-section">
+                        <h3><i class="fas fa-trophy"></i> All Leagues</h3>
+                        <div class="search-section">
+                            <div class="search-input-container">
+                                <input type="text" id="leagues-search" placeholder="Filter leagues by name..." class="search-input">
+                                <button id="clear-leagues-search" class="clear-search-btn" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div id="leagues-grid" class="selection-grid">
-                        <!-- Leagues will be loaded based on selected sports -->
+                        <div id="leagues-grid" class="selection-grid">
+                            <!-- All leagues will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </section>

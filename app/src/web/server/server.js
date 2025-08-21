@@ -508,12 +508,15 @@ class SportsEventsServer {
                 // Get events from selected leagues
                 let allEvents = [];
                 if (preferences.selectedLeagues.length > 0) {
-                    const eventsPromises = preferences.selectedLeagues.map(async (leagueId) => {
+                    const eventsPromises = preferences.selectedLeagues.map(async (league) => {
                         try {
+                            // Extract the ID from the league object
+                            const leagueId = typeof league === 'string' ? league : league.id;
+                            console.log('🔄 Fetching events for league ID:', leagueId);
                             const result = await this.sportsAPI.getEventsByLeague(leagueId);
                             return result.success ? result.events : [];
                         } catch (error) {
-                            console.error(`Error fetching events for league ${leagueId}:`, error);
+                            console.error(`Error fetching events for league ${league}:`, error);
                             return [];
                         }
                     });

@@ -21,5 +21,7 @@ IMPLEMENTED FEATURES:
 
 8. requerimientos Thursday 21
 - fix tenis
+- in the events ui, add expand/ collapse sections and scrollable content, idem the preferences page
+- in both event and preferences page, add chips with the selected sports, teams, leagues, etc.
 - db per user
 

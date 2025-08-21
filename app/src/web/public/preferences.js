@@ -6,6 +6,8 @@ class PreferencesManager {
         this.selectedTeams = new Map(); // Changed to Map to store team objects
         this.selectedLeagues = new Map(); // Changed to Map to store league objects
         this.availableSports = [];
+        this.availableTeams = []; // Store all teams
+        this.availableLeagues = []; // Store all leagues
         this.searchResults = [];
         this.init();
     }
@@ -16,6 +18,8 @@ class PreferencesManager {
         await this.loadPreferences();
         await this.loadAvailableSports();
         this.renderSports();
+        await this.loadAllTeams();
+        await this.loadAllLeagues();
         this.updateChipsDisplay();
     }
 
@@ -25,17 +29,8 @@ class PreferencesManager {
             this.resetPreferences();
         });
 
-        // Team search
-        document.getElementById('search-teams-btn').addEventListener('click', () => {
-            this.searchTeams();
-        });
-
-        // Allow Enter key for team search
-        document.getElementById('team-search').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.searchTeams();
-            }
-        });
+        // Remove the search teams button since we now filter in real-time
+        // (search functionality is now handled by the real-time filter inputs)
 
         // Logout button
         const logoutBtn = document.getElementById('logout-btn');
@@ -211,6 +206,151 @@ class PreferencesManager {
         }
     }
 
+    async loadAllTeams() {
+        this.showLoading('Loading all teams...');
+        this.availableTeams = [];
+        
+        try {
+            // Get all sports first
+            if (this.availableSports.length === 0) {
+                this.hideLoading();
+                return;
+            }
+
+            // Load teams from multiple popular sports
+            const popularSports = this.availableSports.slice(0, 10); // Get first 10 sports
+            const teamsPromises = popularSports.map(async (sport) => {
+                try {
+                    const sportName = sport.originalName || sport.name;
+                    const response = await fetch(`/api/teams/sport/${encodeURIComponent(sportName)}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.teams && data.teams.length > 0) {
+                            return data.teams;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error loading teams for ${sport.name}:`, error);
+                }
+                return [];
+            });
+
+            const allTeams = await Promise.all(teamsPromises);
+            const flatTeams = allTeams.flat();
+
+            // Remove duplicates and sort
+            this.availableTeams = flatTeams.filter((team, index, self) => 
+                index === self.findIndex(t => t.idTeam === team.idTeam)
+            ).sort((a, b) => a.strTeam.localeCompare(b.strTeam));
+
+            console.log(`Loaded ${this.availableTeams.length} teams`);
+            this.renderAllTeams();
+            this.hideLoading();
+
+        } catch (error) {
+            console.error('Error loading all teams:', error);
+            this.hideLoading();
+            this.showError('Error loading teams: ' + error.message);
+        }
+    }
+
+    async loadAllLeagues() {
+        this.showLoading('Loading all leagues...');
+        this.availableLeagues = [];
+        
+        try {
+            // Get all sports first
+            if (this.availableSports.length === 0) {
+                this.hideLoading();
+                return;
+            }
+
+            // Load leagues from all sports
+            const leaguesPromises = this.availableSports.map(async (sport) => {
+                try {
+                    const sportName = sport.originalName || sport.name;
+                    const response = await fetch(`/api/leagues/${encodeURIComponent(sportName)}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.leagues && data.leagues.length > 0) {
+                            return data.leagues;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error loading leagues for ${sport.name}:`, error);
+                }
+                return [];
+            });
+
+            const allLeagues = await Promise.all(leaguesPromises);
+            const flatLeagues = allLeagues.flat();
+
+            // Remove duplicates and sort
+            this.availableLeagues = flatLeagues.filter((league, index, self) => 
+                index === self.findIndex(l => l.idLeague === league.idLeague)
+            ).sort((a, b) => a.strLeague.localeCompare(b.strLeague));
+
+            console.log(`Loaded ${this.availableLeagues.length} leagues`);
+            this.renderAllLeagues();
+            this.hideLoading();
+
+        } catch (error) {
+            console.error('Error loading all leagues:', error);
+            this.hideLoading();
+            this.showError('Error loading leagues: ' + error.message);
+        }
+    }
+
+    renderAllTeams() {
+        const teamsGrid = document.getElementById('teams-grid');
+        teamsGrid.innerHTML = '';
+
+        if (this.availableTeams.length === 0) {
+            teamsGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No teams available</h3>
+                    <p>Unable to load teams from the API</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.availableTeams.forEach(team => {
+            const teamElement = this.createTeamCard(team);
+            teamElement.addEventListener('click', () => {
+                this.toggleTeamSelection(team);
+            });
+            teamsGrid.appendChild(teamElement);
+        });
+    }
+
+    renderAllLeagues() {
+        const leaguesGrid = document.getElementById('leagues-grid');
+        leaguesGrid.innerHTML = '';
+
+        if (this.availableLeagues.length === 0) {
+            leaguesGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-trophy"></i>
+                    <h3>No leagues available</h3>
+                    <p>Unable to load leagues from the API</p>
+                </div>
+            `;
+            return;
+        }
+
+        this.availableLeagues.forEach(league => {
+            const leagueElement = this.createLeagueCard(league);
+            leagueElement.addEventListener('click', () => {
+                this.toggleLeagueSelection(league.idLeague);
+            });
+            leaguesGrid.appendChild(leagueElement);
+        });
+    }
+
     renderSports() {
         const sportsGrid = document.getElementById('sports-grid');
         sportsGrid.innerHTML = '';
@@ -245,134 +385,15 @@ class PreferencesManager {
 
             sportElement.addEventListener('click', () => {
                 this.toggleSportSelection(sport.id);
-                this.updateLeaguesDisplay();
-                this.updateTeamsFromSports();
             });
 
             sportsGrid.appendChild(sportElement);
         });
-
-        // Update leagues display after rendering sports
-        this.updateLeaguesDisplay();
     }
 
-    async updateLeaguesDisplay() {
-        const leaguesGrid = document.getElementById('leagues-grid');
-        leaguesGrid.innerHTML = '';
 
-        // Reset search filters when updating content
-        const leaguesSearch = document.getElementById('leagues-search');
-        if (leaguesSearch) {
-            leaguesSearch.value = '';
-        }
-        const clearLeaguesSearch = document.getElementById('clear-leagues-search');
-        if (clearLeaguesSearch) {
-            clearLeaguesSearch.style.display = 'none';
-        }
 
-        if (this.selectedSports.size === 0) {
-            leaguesGrid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-trophy"></i>
-                    <h3>Select sports first</h3>
-                    <p>Choose sports above to see available leagues</p>
-                </div>
-            `;
-            return;
-        }
 
-        this.showLoading('Loading leagues...');
-
-        try {
-            // Get leagues for selected sports
-            const leaguesPromises = Array.from(this.selectedSports).map(async (sportId) => {
-                // Find the original sport name from our available sports
-                const sport = this.availableSports.find(s => s.id === sportId);
-                const sportName = sport ? sport.originalName || sport.name : sportId;
-                
-                const response = await fetch(`/api/leagues/${encodeURIComponent(sportName)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.success ? data.leagues : [];
-                }
-                return [];
-            });
-
-            const allLeagues = await Promise.all(leaguesPromises);
-            const flatLeagues = allLeagues.flat();
-
-            this.hideLoading();
-
-            if (flatLeagues.length === 0) {
-                leaguesGrid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-search"></i>
-                        <h3>No leagues found</h3>
-                        <p>No leagues available for selected sports</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Remove duplicates and sort
-            const uniqueLeagues = flatLeagues.filter((league, index, self) => 
-                index === self.findIndex(l => l.idLeague === league.idLeague)
-            ).sort((a, b) => a.strLeague.localeCompare(b.strLeague));
-
-            uniqueLeagues.forEach(league => {
-                const leagueElement = this.createLeagueCard(league);
-                leagueElement.addEventListener('click', () => {
-                    this.toggleLeagueSelection(league.idLeague);
-                });
-                leaguesGrid.appendChild(leagueElement);
-            });
-
-        } catch (error) {
-            this.hideLoading();
-            this.showError('Error loading leagues: ' + error.message);
-        }
-    }
-
-    async searchTeams() {
-        const searchTerm = document.getElementById('team-search').value.trim();
-        const resultsContainer = document.getElementById('teams-results');
-
-        if (!searchTerm) {
-            this.showError('Please enter a team name to search');
-            return;
-        }
-
-        this.showLoading('Searching teams...');
-        resultsContainer.innerHTML = '';
-
-        try {
-            const response = await fetch(`/api/teams/search/${encodeURIComponent(searchTerm)}`);
-            const data = await response.json();
-
-            this.hideLoading();
-
-            if (data.success && data.teams && data.teams.length > 0) {
-                data.teams.forEach(team => {
-                    const teamElement = this.createTeamCard(team);
-                    teamElement.addEventListener('click', () => {
-                        this.toggleTeamSelection(team);
-                    });
-                    resultsContainer.appendChild(teamElement);
-                });
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-search"></i>
-                        <h3>No teams found</h3>
-                        <p>Try searching with different keywords</p>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            this.hideLoading();
-            this.showError('Error searching teams: ' + error.message);
-        }
-    }
 
     createSelectableItem(id, icon, name, description, isSelected = false) {
         const item = document.createElement('div');
@@ -426,6 +447,9 @@ class PreferencesManager {
             this.selectedSports.add(sportId);
             sportElement.classList.add('selected');
         }
+        
+        // Update chips display
+        this.updateChipsDisplay();
         
         // Auto-save when selection changes
         this.autoSavePreferences();
@@ -863,168 +887,9 @@ class PreferencesManager {
         }
     }
 
-    // Teams from selected sports functionality
-    async updateTeamsFromSports() {
-        const teamsFromSportsGrid = document.getElementById('teams-from-sports');
-        teamsFromSportsGrid.innerHTML = '';
 
-        // Reset search filters when updating content
-        const teamsSearch = document.getElementById('teams-search');
-        if (teamsSearch) {
-            teamsSearch.value = '';
-        }
-        const clearTeamsSearch = document.getElementById('clear-teams-search');
-        if (clearTeamsSearch) {
-            clearTeamsSearch.style.display = 'none';
-        }
 
-        if (this.selectedSports.size === 0) {
-            teamsFromSportsGrid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-futbol"></i>
-                    <h3>Select sports first</h3>
-                    <p>Choose sports above to see teams automatically</p>
-                </div>
-            `;
-            return;
-        }
 
-        this.showLoading('Loading teams from your selected sports...');
-
-        try {
-            // Get teams for each selected sport
-            const teamsPromises = Array.from(this.selectedSports).map(async (sportId) => {
-                const sport = this.availableSports.find(s => s.id === sportId);
-                const sportName = sport ? sport.originalName || sport.name : sportId;
-                
-                try {
-                    console.log(`Fetching teams for sport: ${sportName}`);
-                    const response = await fetch(`/api/teams/sport/${encodeURIComponent(sportName)}`);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log(`Teams response for ${sportName}:`, data);
-                        
-                        if (data.success && data.teams && data.teams.length > 0) {
-                            return data.teams;
-                        } else {
-                            console.log(`No teams found for ${sportName}: ${data.message}`);
-                            return [];
-                        }
-                    } else {
-                        console.error(`Failed to fetch teams for ${sportName}: ${response.status}`);
-                        return [];
-                    }
-                } catch (error) {
-                    console.error(`Error fetching teams for ${sportName}:`, error);
-                    return [];
-                }
-            });
-
-            const allTeams = await Promise.all(teamsPromises);
-            const flatTeams = allTeams.flat();
-
-            this.hideLoading();
-
-            console.log(`Total teams found: ${flatTeams.length}`);
-
-            if (flatTeams.length === 0) {
-                // Show a more helpful message when no teams are found
-                const selectedSportsNames = Array.from(this.selectedSports).map(sportId => {
-                    const sport = this.availableSports.find(s => s.id === sportId);
-                    return sport ? sport.name : sportId;
-                }).join(', ');
-
-                teamsFromSportsGrid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-info-circle"></i>
-                        <h3>Loading teams...</h3>
-                        <p>We're looking for teams in: ${selectedSportsNames}</p>
-                        <p>This may take a moment as we search through leagues.</p>
-                        <div class="retry-section">
-                            <button class="btn btn-secondary" onclick="window.preferencesManager.updateTeamsFromSports()">
-                                <i class="fas fa-refresh"></i> Try Again
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            // Remove duplicates and sort
-            const uniqueTeams = flatTeams.filter((team, index, self) => 
-                index === self.findIndex(t => t.idTeam === team.idTeam)
-            ).sort((a, b) => a.strTeam.localeCompare(b.strTeam));
-
-            console.log(`Rendering ${uniqueTeams.length} unique teams`);
-
-            uniqueTeams.forEach(team => {
-                const teamElement = this.createTeamCard(team);
-                teamElement.addEventListener('click', () => {
-                    this.toggleTeamSelection(team);
-                });
-                teamsFromSportsGrid.appendChild(teamElement);
-            });
-
-        } catch (error) {
-            this.hideLoading();
-            console.error('Error loading teams from sports:', error);
-            teamsFromSportsGrid.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Error loading teams</h3>
-                    <p>Unable to load teams for selected sports. Please check your connection and try again.</p>
-                    <div class="retry-section">
-                        <button class="btn btn-secondary" onclick="window.preferencesManager.updateTeamsFromSports()">
-                            <i class="fas fa-refresh"></i> Retry
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-    }
-
-    // Enhanced search functionality (now for additional teams)
-    async searchTeams() {
-        const searchTerm = document.getElementById('team-search').value.trim();
-        const resultsContainer = document.getElementById('teams-search-results');
-
-        if (!searchTerm) {
-            this.showError('Please enter a team name to search');
-            return;
-        }
-
-        this.showLoading('Searching for additional teams...');
-        resultsContainer.innerHTML = '';
-
-        try {
-            const response = await fetch(`/api/teams/search/${encodeURIComponent(searchTerm)}`);
-            const data = await response.json();
-
-            this.hideLoading();
-
-            if (data.success && data.teams && data.teams.length > 0) {
-                data.teams.forEach(team => {
-                    const teamElement = this.createTeamCard(team);
-                    teamElement.addEventListener('click', () => {
-                        this.toggleTeamSelection(team);
-                    });
-                    resultsContainer.appendChild(teamElement);
-                });
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-search"></i>
-                        <h3>No additional teams found</h3>
-                        <p>Try searching with different keywords</p>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            this.hideLoading();
-            this.showError('Error searching for additional teams: ' + error.message);
-        }
-    }
 
     // Override the renderSports method to populate filters
     renderSports() {
@@ -1064,10 +929,6 @@ class PreferencesManager {
 
         // Populate filter options after rendering sports
         this.populateFilterOptions();
-        
-        // Update leagues and teams display after rendering sports
-        this.updateLeaguesDisplay();
-        this.updateTeamsFromSports();
     }
 
     // CHIPS MANAGEMENT METHODS
@@ -1130,8 +991,6 @@ class PreferencesManager {
                             sportElement.classList.remove('selected');
                         }
                         this.updateChipsDisplay();
-                        this.updateLeaguesDisplay();
-                        this.updateTeamsFromSports();
                         this.autoSavePreferences();
                     }
                 );
@@ -1236,9 +1095,9 @@ class PreferencesManager {
             });
 
             this.updateSelectedTeamsDisplay();
-            this.updateLeaguesDisplay();
-                    this.updateChipsDisplay();
-        this.autoSavePreferences();
+            this.updateChipsDisplay();
+            this.autoSavePreferences();
+        }
     }
 
     // SEARCH FUNCTIONALITY METHODS
@@ -1309,7 +1168,7 @@ class PreferencesManager {
      * Filter teams based on search term
      */
     filterTeams(searchTerm) {
-        const teamsGrid = document.getElementById('teams-from-sports');
+        const teamsGrid = document.getElementById('teams-grid');
         const teamCards = teamsGrid.querySelectorAll('.team-card');
         
         const term = searchTerm.toLowerCase().trim();

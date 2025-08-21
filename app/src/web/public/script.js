@@ -229,15 +229,46 @@ class SportsEventsDashboard {
                 ` : ''}
             </div>
             
-            ${event.homeScore !== null && event.awayScore !== null ? `
-                <div class="event-score">
-                    <div class="score-display">${event.homeScore} - ${event.awayScore}</div>
-                    <div class="teams">${event.homeTeam} vs ${event.awayTeam}</div>
-                </div>
-            ` : ''}
+            ${this.getTeamsDisplay(event)}
         `;
 
         return card;
+    }
+
+    getTeamsDisplay(event) {
+        if (event.homeScore !== null && event.awayScore !== null) {
+            return `
+                <div class="event-score">
+                    <div class="score-display">${event.homeScore} - ${event.awayScore}</div>
+                    <div class="teams">${this.formatTeamNames(event)}</div>
+                </div>
+            `;
+        }
+        const teamDisplay = this.formatTeamNames(event);
+        if (teamDisplay) {
+            return `
+                <div class="event-teams">
+                    <div class="teams">${teamDisplay}</div>
+                </div>
+            `;
+        }
+        return '';
+    }
+
+    formatTeamNames(event) {
+        if (event.name) {
+            const sport = this.detectSportFromEvent(event);
+            if (sport === 'Tennis' || sport === 'Golf' || sport === 'Boxing') {
+                return event.name;
+            }
+        }
+        if (event.homeTeam && event.awayTeam) {
+            return `${event.homeTeam} vs ${event.awayTeam}`;
+        }
+        if (event.name) {
+            return event.name;
+        }
+        return null;
     }
 
     groupEventsBySport(events) {
@@ -255,6 +286,12 @@ class SportsEventsDashboard {
     }
 
     detectSportFromEvent(event) {
+        // Use the sport field directly if available
+        if (event.sport) {
+            console.log('✅ Using event.sport:', event.sport, 'for event:', event.name);
+            return event.sport;
+        }
+        
         // Try to detect sport from league name or event data
         const league = (event.league || '').toLowerCase();
         const eventName = (event.name || '').toLowerCase();

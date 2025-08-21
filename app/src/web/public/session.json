@@ -23,7 +23,7 @@
       "password": "123456",
       "newsletter": false,
       "createdAt": "2025-08-20T21:34:13.736Z",
-      "lastLogin": "2025-08-20T22:01:50.995Z",
+      "lastLogin": "2025-08-21T15:51:28.731Z",
       "emailVerified": false,
       "isActive": true
     },
@@ -40,16 +40,40 @@
     }
   },
   "sessions": {
-    "3c82360d5f122e617607d90aaacd6c3bd043064df99257ba50de6110ba49c0f2": {
+    "b24e4745ed7cc19292150d3b6b836d01b020518076fe0fc2a48b1d46ed766a49": {
       "userId": "juanmdura",
       "user": {
         "username": "juanmdura",
         "email": "juanmdura@gmail.com",
         "displayName": "Juan Dura",
-        "lastLogin": "2025-08-20T22:01:50.995Z"
+        "lastLogin": "2025-08-21T15:41:17.607Z"
       },
-      "createdAt": "2025-08-20T22:01:50.997Z",
-      "expiresAt": "2025-08-21T22:01:50.997Z",
+      "createdAt": "2025-08-21T15:41:17.609Z",
+      "expiresAt": "2025-08-22T15:41:17.609Z",
+      "rememberMe": false
+    },
+    "fc0c7b0b0def9714d002fadc0964350bf9751646a1115b627357f8db6247de06": {
+      "userId": "juanmdura",
+      "user": {
+        "username": "juanmdura",
+        "email": "juanmdura@gmail.com",
+        "displayName": "Juan Dura",
+        "lastLogin": "2025-08-21T15:42:08.458Z"
+      },
+      "createdAt": "2025-08-21T15:42:08.459Z",
+      "expiresAt": "2025-08-22T15:42:08.459Z",
+      "rememberMe": false
+    },
+    "4e17ba9fda1b412163e852b8645c4cf303a1b3f80a17c66c46fd7d6da77d2244": {
+      "userId": "juanmdura",
+      "user": {
+        "username": "juanmdura",
+        "email": "juanmdura@gmail.com",
+        "displayName": "Juan Dura",
+        "lastLogin": "2025-08-21T15:51:28.731Z"
+      },
+      "createdAt": "2025-08-21T15:51:28.732Z",
+      "expiresAt": "2025-08-22T15:51:28.732Z",
       "rememberMe": false
     }
   }
