@@ -468,6 +468,7 @@ class SportsEventsDashboard {
                 const data = await response.json();
                 if (data.success) {
                     this.userPreferences = data.preferences;
+                    this.updateChipsDisplay();
                 }
             }
         } catch (error) {
@@ -477,9 +478,9 @@ class SportsEventsDashboard {
 
     hasPreferences() {
         return this.userPreferences && 
-               (this.userPreferences.selectedSports.length > 0 || 
-                this.userPreferences.selectedLeagues.length > 0 ||
-                this.userPreferences.selectedTeams.length > 0);
+               ((this.userPreferences.selectedSports && this.userPreferences.selectedSports.length > 0) || 
+                (this.userPreferences.selectedLeagues && this.userPreferences.selectedLeagues.length > 0) ||
+                (this.userPreferences.selectedTeams && this.userPreferences.selectedTeams.length > 0));
     }
 
     async loadFilteredDashboard() {
@@ -684,6 +685,159 @@ class SportsEventsDashboard {
             console.error('Logout error:', error);
             this.showError('Logout failed. Please try again.');
         }
+    }
+
+    // CHIPS FUNCTIONALITY FOR EVENTS PAGE
+
+    /**
+     * Update the chips display with current user preferences
+     */
+    updateChipsDisplay() {
+        if (!this.userPreferences || !this.hasPreferences()) {
+            this.hideChipsSection();
+            return;
+        }
+
+        this.showChipsSection();
+        this.loadAvailableSportsData().then(() => {
+            this.updateEventsPageChips();
+        });
+    }
+
+    /**
+     * Load available sports data for chip display
+     */
+    async loadAvailableSportsData() {
+        if (this.availableSportsData) return;
+
+        try {
+            const response = await fetch('/api/sports');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.availableSportsData = data.sports;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading sports data for chips:', error);
+        }
+    }
+
+    /**
+     * Create a chip element
+     */
+    createChip(text, icon, isRemovable = false) {
+        const chip = document.createElement('div');
+        chip.className = `chip ${isRemovable ? 'removable' : ''}`;
+        
+        chip.innerHTML = `
+            ${icon ? `<span class="chip-icon">${icon}</span>` : ''}
+            <span class="chip-text">${text}</span>
+        `;
+
+        return chip;
+    }
+
+    /**
+     * Update chips display for events page
+     */
+    updateEventsPageChips() {
+        const sportsChipsContainer = document.getElementById('sports-chips');
+        const teamsChipsContainer = document.getElementById('teams-chips');
+        const leaguesChipsContainer = document.getElementById('leagues-chips');
+
+        // Clear existing chips
+        sportsChipsContainer.innerHTML = '';
+        teamsChipsContainer.innerHTML = '';
+        leaguesChipsContainer.innerHTML = '';
+
+        // Add sports chips
+        if (this.userPreferences.selectedSports && this.userPreferences.selectedSports.length > 0) {
+            this.userPreferences.selectedSports.forEach(sportId => {
+                const sport = this.availableSportsData?.find(s => s.id === sportId);
+                if (sport) {
+                    const chip = this.createChip(sport.name, sport.icon);
+                    sportsChipsContainer.appendChild(chip);
+                }
+            });
+        }
+
+        // Add teams chips
+        if (this.userPreferences.selectedTeams && this.userPreferences.selectedTeams.length > 0) {
+            this.userPreferences.selectedTeams.forEach(team => {
+                // Handle both old format (string ID) and new format (object)
+                let teamName, teamId;
+                if (typeof team === 'string') {
+                    teamId = team;
+                    teamName = `Team ${teamId}`;
+                } else {
+                    teamId = team.id;
+                    teamName = team.name;
+                }
+                const chip = this.createChip(teamName, '👥');
+                teamsChipsContainer.appendChild(chip);
+            });
+        }
+
+        // Add leagues chips
+        if (this.userPreferences.selectedLeagues && this.userPreferences.selectedLeagues.length > 0) {
+            this.userPreferences.selectedLeagues.forEach(league => {
+                // Handle both old format (string ID) and new format (object)
+                let leagueName, leagueId;
+                if (typeof league === 'string') {
+                    leagueId = league;
+                    leagueName = `League ${leagueId}`;
+                } else {
+                    leagueId = league.id;
+                    leagueName = league.name;
+                }
+                const chip = this.createChip(leagueName, '🏆');
+                leaguesChipsContainer.appendChild(chip);
+            });
+        }
+    }
+
+    /**
+     * Show the chips section
+     */
+    showChipsSection() {
+        const chipsSection = document.getElementById('chips-section');
+        if (chipsSection) {
+            chipsSection.style.display = 'block';
+        }
+    }
+
+    /**
+     * Hide the chips section
+     */
+    hideChipsSection() {
+        const chipsSection = document.getElementById('chips-section');
+        if (chipsSection) {
+            chipsSection.style.display = 'none';
+        }
+    }
+
+    /**
+     * Get sport icon by name
+     */
+    getSportIcon(sportName) {
+        const icons = {
+            'Soccer': '⚽',
+            'Basketball': '🏀',
+            'American Football': '🏈',
+            'Baseball': '⚾',
+            'Ice Hockey': '🏒',
+            'Tennis': '🎾',
+            'Rugby': '🏉',
+            'Golf': '⛳',
+            'Boxing': '🥊',
+            'Swimming': '🏊',
+            'Athletics': '🏃',
+            'Cycling': '🚴',
+            'Other Sports': '🏅'
+        };
+        
+        return icons[sportName] || '🏅';
     }
 }
 

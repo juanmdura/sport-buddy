@@ -56,6 +56,24 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Selected Items Chips Display -->
+            <section class="chips-section" id="chips-section" style="display: none;">
+                <div class="section-header">
+                    <h2><i class="fas fa-tags"></i> Your Current Selections</h2>
+                </div>
+                <div class="chips-container-horizontal">
+                    <div id="sports-chips" class="chips-display">
+                        <!-- Sports chips will be populated here -->
+                    </div>
+                    <div id="teams-chips" class="chips-display">
+                        <!-- Teams chips will be populated here -->
+                    </div>
+                    <div id="leagues-chips" class="chips-display">
+                        <!-- Leagues chips will be populated here -->
+                    </div>
+                </div>
+            </section>
+
             <!-- Filters Section -->
             <section class="preferences-section">
                 <div class="section-header">
@@ -91,6 +109,14 @@
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div id="sports-content" class="section-content">
+                    <div class="search-section">
+                        <div class="search-input-container">
+                            <input type="text" id="sports-search" placeholder="Search sports..." class="search-input">
+                            <button id="clear-sports-search" class="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div id="sports-grid" class="selection-grid">
                         <!-- Sports will be loaded here -->
                     </div>
@@ -107,6 +133,14 @@
                     <!-- Teams from Selected Sports -->
                     <div class="teams-from-sports-section">
                         <h3><i class="fas fa-star"></i> Teams from Your Selected Sports</h3>
+                        <div class="search-section">
+                            <div class="search-input-container">
+                                <input type="text" id="teams-search" placeholder="Search teams..." class="search-input">
+                                <button id="clear-teams-search" class="clear-search-btn" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div id="teams-from-sports" class="selection-grid">
                             <!-- Teams from selected sports will appear here -->
                         </div>
@@ -144,6 +178,14 @@
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div id="leagues-content" class="section-content">
+                    <div class="search-section">
+                        <div class="search-input-container">
+                            <input type="text" id="leagues-search" placeholder="Search leagues..." class="search-input">
+                            <button id="clear-leagues-search" class="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div id="leagues-grid" class="selection-grid">
                         <!-- Leagues will be loaded based on selected sports -->
                     </div>

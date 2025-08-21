@@ -3,8 +3,8 @@
 class PreferencesManager {
     constructor() {
         this.selectedSports = new Set();
-        this.selectedTeams = new Set();
-        this.selectedLeagues = new Set();
+        this.selectedTeams = new Map(); // Changed to Map to store team objects
+        this.selectedLeagues = new Map(); // Changed to Map to store league objects
         this.availableSports = [];
         this.searchResults = [];
         this.init();
@@ -16,6 +16,7 @@ class PreferencesManager {
         await this.loadPreferences();
         await this.loadAvailableSports();
         this.renderSports();
+        this.updateChipsDisplay();
     }
 
     bindEvents() {
@@ -65,6 +66,80 @@ class PreferencesManager {
                 this.toggleSection(e.currentTarget.dataset.section);
             });
         });
+
+        // Search functionality
+        this.bindSearchEvents();
+    }
+
+    bindSearchEvents() {
+        // Sports search
+        const sportsSearch = document.getElementById('sports-search');
+        const clearSportsSearch = document.getElementById('clear-sports-search');
+        
+        if (sportsSearch) {
+            sportsSearch.addEventListener('input', (e) => {
+                this.filterSports(e.target.value);
+                this.toggleClearButton(e.target.value, clearSportsSearch);
+            });
+            
+            sportsSearch.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.clearSearch('sports');
+                }
+            });
+        }
+        
+        if (clearSportsSearch) {
+            clearSportsSearch.addEventListener('click', () => {
+                this.clearSearch('sports');
+            });
+        }
+
+        // Teams search
+        const teamsSearch = document.getElementById('teams-search');
+        const clearTeamsSearch = document.getElementById('clear-teams-search');
+        
+        if (teamsSearch) {
+            teamsSearch.addEventListener('input', (e) => {
+                this.filterTeams(e.target.value);
+                this.toggleClearButton(e.target.value, clearTeamsSearch);
+            });
+            
+            teamsSearch.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.clearSearch('teams');
+                }
+            });
+        }
+        
+        if (clearTeamsSearch) {
+            clearTeamsSearch.addEventListener('click', () => {
+                this.clearSearch('teams');
+            });
+        }
+
+        // Leagues search
+        const leaguesSearch = document.getElementById('leagues-search');
+        const clearLeaguesSearch = document.getElementById('clear-leagues-search');
+        
+        if (leaguesSearch) {
+            leaguesSearch.addEventListener('input', (e) => {
+                this.filterLeagues(e.target.value);
+                this.toggleClearButton(e.target.value, clearLeaguesSearch);
+            });
+            
+            leaguesSearch.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.clearSearch('leagues');
+                }
+            });
+        }
+        
+        if (clearLeaguesSearch) {
+            clearLeaguesSearch.addEventListener('click', () => {
+                this.clearSearch('leagues');
+            });
+        }
     }
 
     async loadPreferences() {
@@ -74,8 +149,33 @@ class PreferencesManager {
                 const data = await response.json();
                 if (data.success) {
                     this.selectedSports = new Set(data.preferences.selectedSports || []);
-                    this.selectedTeams = new Set(data.preferences.selectedTeams || []);
-                    this.selectedLeagues = new Set(data.preferences.selectedLeagues || []);
+                    
+                    // Handle both old format (array of IDs) and new format (array of objects)
+                    this.selectedTeams = new Map();
+                    if (data.preferences.selectedTeams) {
+                        data.preferences.selectedTeams.forEach(team => {
+                            if (typeof team === 'string') {
+                                // Old format - just ID
+                                this.selectedTeams.set(team, { id: team, name: `Team ${team}` });
+                            } else {
+                                // New format - object with id and name
+                                this.selectedTeams.set(team.id, team);
+                            }
+                        });
+                    }
+                    
+                    this.selectedLeagues = new Map();
+                    if (data.preferences.selectedLeagues) {
+                        data.preferences.selectedLeagues.forEach(league => {
+                            if (typeof league === 'string') {
+                                // Old format - just ID
+                                this.selectedLeagues.set(league, { id: league, name: `League ${league}` });
+                            } else {
+                                // New format - object with id and name
+                                this.selectedLeagues.set(league.id, league);
+                            }
+                        });
+                    }
                 }
             }
         } catch (error) {
@@ -118,6 +218,9 @@ class PreferencesManager {
         console.log('Rendering sports:', this.availableSports.length, 'sports available'); // Debug log
         console.log('Sports data:', this.availableSports); // Debug log
 
+        // Reset search filters when rendering new content
+        this.resetSearchFilters();
+
         if (this.availableSports.length === 0) {
             sportsGrid.innerHTML = `
                 <div class="empty-state">
@@ -156,6 +259,16 @@ class PreferencesManager {
     async updateLeaguesDisplay() {
         const leaguesGrid = document.getElementById('leagues-grid');
         leaguesGrid.innerHTML = '';
+
+        // Reset search filters when updating content
+        const leaguesSearch = document.getElementById('leagues-search');
+        if (leaguesSearch) {
+            leaguesSearch.value = '';
+        }
+        const clearLeaguesSearch = document.getElementById('clear-leagues-search');
+        if (clearLeaguesSearch) {
+            clearLeaguesSearch.style.display = 'none';
+        }
 
         if (this.selectedSports.size === 0) {
             leaguesGrid.innerHTML = `
@@ -325,7 +438,12 @@ class PreferencesManager {
             this.selectedTeams.delete(team.idTeam);
             teamElement.classList.remove('selected');
         } else {
-            this.selectedTeams.add(team.idTeam);
+            // Store team object with both id and name
+            this.selectedTeams.set(team.idTeam, {
+                id: team.idTeam,
+                name: team.strTeam,
+                sport: team.strSport || 'Unknown Sport'
+            });
             teamElement.classList.add('selected');
         }
         
@@ -333,6 +451,9 @@ class PreferencesManager {
         
         // Auto-save when selection changes
         this.autoSavePreferences();
+        
+        // Update chips display
+        this.updateChipsDisplay();
     }
 
     toggleLeagueSelection(leagueId) {
@@ -342,12 +463,22 @@ class PreferencesManager {
             this.selectedLeagues.delete(leagueId);
             leagueElement.classList.remove('selected');
         } else {
-            this.selectedLeagues.add(leagueId);
+            // Store league object with both id and name
+            const leagueName = leagueElement.querySelector('.league-name').textContent;
+            const leagueSport = leagueElement.querySelector('.league-sport').textContent;
+            this.selectedLeagues.set(leagueId, {
+                id: leagueId,
+                name: leagueName,
+                sport: leagueSport
+            });
             leagueElement.classList.add('selected');
         }
         
         // Auto-save when selection changes
         this.autoSavePreferences();
+        
+        // Update chips display
+        this.updateChipsDisplay();
     }
 
     updateSelectedTeamsDisplay() {
@@ -359,19 +490,20 @@ class PreferencesManager {
             return;
         }
 
-        this.selectedTeams.forEach(teamId => {
+        this.selectedTeams.forEach((teamData, teamId) => {
             const teamElement = document.querySelector(`[data-team-id="${teamId}"]`);
-            if (teamElement) {
-                const teamName = teamElement.querySelector('.team-name').textContent;
-                const tag = this.createSelectedItemTag(teamName, () => {
-                    this.selectedTeams.delete(teamId);
+            const teamName = teamData.name;
+            const tag = this.createSelectedItemTag(teamName, () => {
+                this.selectedTeams.delete(teamId);
+                if (teamElement) {
                     teamElement.classList.remove('selected');
-                    this.updateSelectedTeamsDisplay();
-                    // Auto-save when team is removed
-                    this.autoSavePreferences();
-                });
-                selectedTeamsContainer.appendChild(tag);
-            }
+                }
+                this.updateSelectedTeamsDisplay();
+                this.updateChipsDisplay();
+                // Auto-save when team is removed
+                this.autoSavePreferences();
+            });
+            selectedTeamsContainer.appendChild(tag);
         });
     }
 
@@ -392,8 +524,8 @@ class PreferencesManager {
         try {
             const preferences = {
                 selectedSports: Array.from(this.selectedSports),
-                selectedTeams: Array.from(this.selectedTeams),
-                selectedLeagues: Array.from(this.selectedLeagues)
+                selectedTeams: Array.from(this.selectedTeams.values()),
+                selectedLeagues: Array.from(this.selectedLeagues.values())
             };
 
             const response = await fetch('/api/preferences', {
@@ -469,6 +601,7 @@ class PreferencesManager {
 
             this.updateSelectedTeamsDisplay();
             this.updateLeaguesDisplay();
+            this.updateChipsDisplay();
             
             // Auto-save the reset
             this.autoSavePreferences();
@@ -735,6 +868,16 @@ class PreferencesManager {
         const teamsFromSportsGrid = document.getElementById('teams-from-sports');
         teamsFromSportsGrid.innerHTML = '';
 
+        // Reset search filters when updating content
+        const teamsSearch = document.getElementById('teams-search');
+        if (teamsSearch) {
+            teamsSearch.value = '';
+        }
+        const clearTeamsSearch = document.getElementById('clear-teams-search');
+        if (clearTeamsSearch) {
+            clearTeamsSearch.style.display = 'none';
+        }
+
         if (this.selectedSports.size === 0) {
             teamsFromSportsGrid.innerHTML = `
                 <div class="empty-state">
@@ -925,6 +1068,342 @@ class PreferencesManager {
         // Update leagues and teams display after rendering sports
         this.updateLeaguesDisplay();
         this.updateTeamsFromSports();
+    }
+
+    // CHIPS MANAGEMENT METHODS
+
+    /**
+     * Update the chips display with current selections
+     */
+    updateChipsDisplay() {
+        this.updateSportsChips();
+        this.updateTeamsChips();
+        this.updateLeaguesChips();
+        this.toggleChipsSection();
+    }
+
+    /**
+     * Create a chip element
+     */
+    createChip(text, icon, isRemovable = true, onRemove = null) {
+        const chip = document.createElement('div');
+        chip.className = `chip ${isRemovable ? 'removable' : ''}`;
+        
+        chip.innerHTML = `
+            ${icon ? `<span class="chip-icon">${icon}</span>` : ''}
+            <span class="chip-text">${text}</span>
+            ${isRemovable ? '<button class="chip-remove" type="button">×</button>' : ''}
+        `;
+
+        if (isRemovable && onRemove) {
+            const removeBtn = chip.querySelector('.chip-remove');
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                chip.classList.add('removing');
+                setTimeout(() => {
+                    onRemove();
+                }, 300);
+            });
+        }
+
+        return chip;
+    }
+
+    /**
+     * Update sports chips
+     */
+    updateSportsChips() {
+        const sportsChipsContainer = document.getElementById('sports-chips');
+        sportsChipsContainer.innerHTML = '';
+
+        this.selectedSports.forEach(sportId => {
+            const sport = this.availableSports.find(s => s.id === sportId);
+            if (sport) {
+                const chip = this.createChip(
+                    sport.name,
+                    sport.icon,
+                    true,
+                    () => {
+                        this.selectedSports.delete(sportId);
+                        const sportElement = document.querySelector(`[data-id="${sportId}"]`);
+                        if (sportElement) {
+                            sportElement.classList.remove('selected');
+                        }
+                        this.updateChipsDisplay();
+                        this.updateLeaguesDisplay();
+                        this.updateTeamsFromSports();
+                        this.autoSavePreferences();
+                    }
+                );
+                sportsChipsContainer.appendChild(chip);
+            }
+        });
+    }
+
+    /**
+     * Update teams chips
+     */
+    updateTeamsChips() {
+        const teamsChipsContainer = document.getElementById('teams-chips');
+        teamsChipsContainer.innerHTML = '';
+
+        this.selectedTeams.forEach((teamData, teamId) => {
+            const teamElement = document.querySelector(`[data-team-id="${teamId}"]`);
+            const chip = this.createChip(
+                teamData.name,
+                '👥',
+                true,
+                () => {
+                    this.selectedTeams.delete(teamId);
+                    if (teamElement) {
+                        teamElement.classList.remove('selected');
+                    }
+                    this.updateChipsDisplay();
+                    this.updateSelectedTeamsDisplay();
+                    this.autoSavePreferences();
+                }
+            );
+            teamsChipsContainer.appendChild(chip);
+        });
+    }
+
+    /**
+     * Update leagues chips
+     */
+    updateLeaguesChips() {
+        const leaguesChipsContainer = document.getElementById('leagues-chips');
+        leaguesChipsContainer.innerHTML = '';
+
+        this.selectedLeagues.forEach((leagueData, leagueId) => {
+            const leagueElement = document.querySelector(`[data-league-id="${leagueId}"]`);
+            const chip = this.createChip(
+                leagueData.name,
+                '🏆',
+                true,
+                () => {
+                    this.selectedLeagues.delete(leagueId);
+                    if (leagueElement) {
+                        leagueElement.classList.remove('selected');
+                    }
+                    this.updateChipsDisplay();
+                    this.autoSavePreferences();
+                }
+            );
+            leaguesChipsContainer.appendChild(chip);
+        });
+    }
+
+    /**
+     * Show or hide the chips section based on selections
+     */
+    toggleChipsSection() {
+        const chipsSection = document.getElementById('chips-section');
+        const chipsContainer = document.querySelector('.chips-container-horizontal');
+        const hasSelections = this.selectedSports.size > 0 || 
+                             this.selectedTeams.size > 0 || 
+                             this.selectedLeagues.size > 0;
+        
+        if (hasSelections) {
+            chipsSection.style.display = 'block';
+            // Remove any empty state message
+            const emptyMessage = chipsContainer.querySelector('.chips-empty-all');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+        } else {
+            chipsSection.style.display = 'none';
+        }
+    }
+
+    /**
+     * Clear all chips and selections
+     */
+    clearAllSelections() {
+        if (confirm('Are you sure you want to clear all selections?')) {
+            this.selectedSports.clear();
+            this.selectedTeams.clear();
+            this.selectedLeagues.clear();
+            
+            // Update UI
+            document.querySelectorAll('.selectable-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.team-card.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelectorAll('.league-card.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            this.updateSelectedTeamsDisplay();
+            this.updateLeaguesDisplay();
+                    this.updateChipsDisplay();
+        this.autoSavePreferences();
+    }
+
+    // SEARCH FUNCTIONALITY METHODS
+
+    /**
+     * Toggle visibility of clear button based on input value
+     */
+    toggleClearButton(value, clearButton) {
+        if (clearButton) {
+            clearButton.style.display = value.trim() ? 'flex' : 'none';
+        }
+    }
+
+    /**
+     * Clear search input and reset filters
+     */
+    clearSearch(type) {
+        const searchInput = document.getElementById(`${type}-search`);
+        const clearButton = document.getElementById(`clear-${type}-search`);
+        
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        
+        if (clearButton) {
+            clearButton.style.display = 'none';
+        }
+        
+        // Reset the filter for this type
+        switch (type) {
+            case 'sports':
+                this.filterSports('');
+                break;
+            case 'teams':
+                this.filterTeams('');
+                break;
+            case 'leagues':
+                this.filterLeagues('');
+                break;
+        }
+    }
+
+    /**
+     * Filter sports based on search term
+     */
+    filterSports(searchTerm) {
+        const sportsGrid = document.getElementById('sports-grid');
+        const sportCards = sportsGrid.querySelectorAll('.selectable-item');
+        
+        const term = searchTerm.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        sportCards.forEach(card => {
+            const sportName = card.querySelector('.item-name').textContent.toLowerCase();
+            const sportDescription = card.querySelector('.item-description').textContent.toLowerCase();
+            const isMatch = !term || sportName.includes(term) || sportDescription.includes(term);
+            
+            card.style.display = isMatch ? 'block' : 'none';
+            if (isMatch) visibleCount++;
+        });
+        
+        // Show/hide empty state
+        this.toggleEmptyState('sports', visibleCount === 0 && term, `No sports found matching "${searchTerm}"`);
+    }
+
+    /**
+     * Filter teams based on search term
+     */
+    filterTeams(searchTerm) {
+        const teamsGrid = document.getElementById('teams-from-sports');
+        const teamCards = teamsGrid.querySelectorAll('.team-card');
+        
+        const term = searchTerm.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        teamCards.forEach(card => {
+            const teamName = card.querySelector('.team-name').textContent.toLowerCase();
+            const teamSport = card.querySelector('.team-sport').textContent.toLowerCase();
+            const isMatch = !term || teamName.includes(term) || teamSport.includes(term);
+            
+            card.style.display = isMatch ? 'block' : 'none';
+            if (isMatch) visibleCount++;
+        });
+        
+        // Show/hide empty state
+        this.toggleEmptyState('teams', visibleCount === 0 && term, `No teams found matching "${searchTerm}"`);
+    }
+
+    /**
+     * Filter leagues based on search term
+     */
+    filterLeagues(searchTerm) {
+        const leaguesGrid = document.getElementById('leagues-grid');
+        const leagueCards = leaguesGrid.querySelectorAll('.league-card');
+        
+        const term = searchTerm.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        leagueCards.forEach(card => {
+            const leagueName = card.querySelector('.league-name').textContent.toLowerCase();
+            const leagueSport = card.querySelector('.league-sport').textContent.toLowerCase();
+            const isMatch = !term || leagueName.includes(term) || leagueSport.includes(term);
+            
+            card.style.display = isMatch ? 'block' : 'none';
+            if (isMatch) visibleCount++;
+        });
+        
+        // Show/hide empty state
+        this.toggleEmptyState('leagues', visibleCount === 0 && term, `No leagues found matching "${searchTerm}"`);
+    }
+
+    /**
+     * Show or hide empty state for search results
+     */
+    toggleEmptyState(type, show, message) {
+        const container = document.getElementById(`${type}-grid`);
+        let emptyState = container.querySelector('.search-empty-state');
+        
+        if (show) {
+            if (!emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.className = 'search-empty-state empty-state';
+                emptyState.innerHTML = `
+                    <i class="fas fa-search"></i>
+                    <h3>No Results Found</h3>
+                    <p>${message}</p>
+                    <div class="empty-actions">
+                        <button class="btn btn-secondary" onclick="window.preferencesManager.clearSearch('${type}')">
+                            <i class="fas fa-times"></i> Clear Search
+                        </button>
+                    </div>
+                `;
+                container.appendChild(emptyState);
+            }
+            emptyState.style.display = 'block';
+        } else {
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Clear all search inputs
+     */
+    clearAllSearches() {
+        ['sports', 'teams', 'leagues'].forEach(type => {
+            this.clearSearch(type);
+        });
+    }
+
+    /**
+     * Reset search when items are loaded
+     */
+    resetSearchFilters() {
+        // Clear any existing search empty states
+        document.querySelectorAll('.search-empty-state').forEach(state => {
+            state.remove();
+        });
+        
+        // Show all items
+        document.querySelectorAll('.selectable-item, .team-card, .league-card').forEach(item => {
+            item.style.display = 'block';
+        });
     }
 }
 
