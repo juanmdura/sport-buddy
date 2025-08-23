@@ -429,6 +429,69 @@ class SportsEventsServer {
             }
         });
 
+        // API endpoint to get current events (aggregate from popular sports)
+        this.app.get('/api/events', async (req, res) => {
+            try {
+                console.log('🔄 Fetching current events from popular sports...');
+                
+                // Define popular sports to get events from
+                const popularSports = ['Soccer', 'Basketball', 'American Football', 'Baseball', 'Tennis'];
+                let allEvents = [];
+                
+                // Get events from each popular sport
+                for (const sport of popularSports) {
+                    try {
+                        console.log(`🏆 Getting events for ${sport}...`);
+                        const leaguesResult = await this.sportsAPI.getLeaguesBySport(sport);
+                        
+                        if (leaguesResult.success && leaguesResult.leagues && leaguesResult.leagues.length > 0) {
+                            // Get events from the first few leagues of this sport
+                            const topLeagues = leaguesResult.leagues.slice(0, 2); // Limit to avoid too many API calls
+                            
+                            for (const league of topLeagues) {
+                                try {
+                                    const eventsResult = await this.sportsAPI.getEventsByLeague(league.idLeague);
+                                    if (eventsResult.success && eventsResult.events) {
+                                        const formattedEvents = eventsResult.events.map(event => ({
+                                            ...this.sportsAPI.formatEvent(event),
+                                            sport: sport // Ensure sport is set correctly
+                                        }));
+                                        allEvents.push(...formattedEvents);
+                                    }
+                                } catch (error) {
+                                    console.error(`Error getting events for league ${league.idLeague}:`, error.message);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error getting leagues for ${sport}:`, error.message);
+                    }
+                }
+                
+                // Remove duplicates and limit results
+                const uniqueEvents = allEvents.filter((event, index, self) => 
+                    index === self.findIndex(e => e.id === event.id)
+                ).slice(0, 50); // Limit to 50 events max
+                
+                console.log(`✅ Found ${uniqueEvents.length} total events`);
+                
+                res.json({
+                    success: true,
+                    events: uniqueEvents,
+                    count: uniqueEvents.length,
+                    message: `Found ${uniqueEvents.length} current events`
+                });
+                
+            } catch (error) {
+                console.error('Error in /api/events endpoint:', error);
+                res.status(500).json({ 
+                    success: false, 
+                    message: 'Error fetching current events',
+                    error: error.message 
+                });
+            }
+        });
+
         // API endpoint to get user preferences (protected)
         this.app.get('/api/preferences', this.requireAuth.bind(this), async (req, res) => {
             try {
@@ -540,6 +603,294 @@ class SportsEventsServer {
                 res.status(500).json({
                     success: false,
                     message: 'Error loading filtered dashboard data',
+                    error: error.message
+                });
+            }
+        });
+
+        // AI Agent endpoint - Connect to real ADK agent
+        this.app.post('/api/agent/chat', this.requireAuth.bind(this), async (req, res) => {
+            try {
+                const { message } = req.body;
+                
+                if (!message) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Message is required'
+                    });
+                }
+
+                console.log(`🤖 AI Agent query: "${message}"`);
+
+                // Get user context for personalized responses
+                const userContext = {
+                    user: req.user,
+                    sessionId: req.sessionId,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Import and call the actual AI agent using spawn for better error handling
+                const { spawn } = require('child_process');
+                const path = require('path');
+                
+                // Path to ADK agent runner
+                const agentPath = path.join(__dirname, '../../../../adk');
+                const agentRunnerPath = path.join(agentPath, 'agent_runner.py');
+                
+                // Escape message and context for shell safety
+                const escapedMessage = message.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                const contextJson = JSON.stringify(userContext).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+                // Execute the real ADK agent with Opik tracing
+                const agentScript = `
+import sys
+import asyncio
+import os
+from io import StringIO
+sys.path.append('${agentPath}')
+
+async def main():
+    try:
+        from agents.sports_events_agent.agent import sports_agent
+        
+        print("AGENT_RESPONSE_START")
+        
+        # Set environment
+        if not os.environ.get('GOOGLE_API_KEY'):
+            os.environ['GOOGLE_API_KEY'] = 'AIzaSyD4Hte33d85BriJG1JI5yDlO1HbE7JjQzM'
+        
+        # Simulate user input via stdin (this method works reliably with ADK)
+        user_message = "${escapedMessage}"
+        original_stdin = sys.stdin
+        sys.stdin = StringIO(user_message + "\\n")
+        
+        full_response = ""
+        
+        try:
+            # Import ADK components
+            from google.adk.agents.invocation_context import InvocationContext
+            from google.adk.sessions.in_memory_session_service import InMemorySessionService
+            from google.adk.agents.run_config import RunConfig
+            import uuid
+            
+            # Create minimal ADK context
+            session_service = InMemorySessionService()
+            run_config = RunConfig(response_modalities=["TEXT"])
+            
+            # Create proper session object with all required fields
+            mock_session = {
+                'id': str(uuid.uuid4()),
+                'state': {},
+                'user_id': 'web-user',
+                'appName': 'sports-buddy-web-chat'
+            }
+            
+            context = InvocationContext(
+                session_service=session_service,
+                invocation_id=str(uuid.uuid4()),
+                agent=sports_agent,
+                session=mock_session,
+                run_config=run_config
+            )
+            
+            # Process agent response with proper ADK pattern
+            chunk_count = 0
+            async for response_chunk in sports_agent.run_async(context):
+                if chunk_count > 20:  # Prevent infinite loops
+                    break
+                chunk_count += 1
+                
+                # Extract ALL content including function calls and responses
+                if hasattr(response_chunk, 'content'):
+                    content = response_chunk.content
+                    if hasattr(content, 'parts'):
+                        for part in content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                text = str(part.text).strip()
+                                if text:
+                                    full_response += text + " "
+                            elif hasattr(part, 'function_call'):
+                                # Function call detected - let the agent complete the call
+                                func_call = part.function_call
+                                if func_call and hasattr(func_call, 'name'):
+                                    full_response += f"[Calling {func_call.name}...] "
+                            elif hasattr(part, 'function_response'):
+                                # Function response - include in final response
+                                func_resp = part.function_response
+                                if func_resp and hasattr(func_resp, 'response'):
+                                    # Parse the tool response
+                                    try:
+                                        import json
+                                        tool_data = json.loads(str(func_resp.response))
+                                        if tool_data.get('success') and tool_data.get('teams'):
+                                            teams = tool_data['teams']
+                                            full_response += f"Found {len(teams)} team(s). "
+                                            for team in teams[:2]:  # Limit to first 2 teams
+                                                full_response += f"{team.get('team_name', 'Unknown')} ({team.get('sport', 'Unknown sport')}, {team.get('league', 'Unknown league')}). "
+                                    except:
+                                        # Fallback to raw response
+                                        full_response += f"Tool result: {str(func_resp.response)[:100]}... "
+                    else:
+                        # Fallback for direct content
+                        content_text = str(response_chunk.content).strip()
+                        if content_text and len(content_text) > 3:
+                            full_response += content_text + " "
+                elif hasattr(response_chunk, 'text'):
+                    text = str(response_chunk.text).strip() 
+                    if text:
+                        full_response += text + " "
+                else:
+                    # Last resort - convert to string
+                    chunk_str = str(response_chunk).strip()
+                    if chunk_str and len(chunk_str) > 5 and not chunk_str.startswith('<'):
+                        full_response += chunk_str + " "
+                        
+        finally:
+            sys.stdin = original_stdin
+        
+        # Clean and output response
+        clean_response = full_response.strip()
+        if clean_response:
+            print(clean_response)
+        else:
+            # Fallback only if no content at all
+            print("I'm Sports Buddy! I can help you find information about any sports team. Which team interests you?")
+        
+        print("AGENT_RESPONSE_END")
+        
+    except Exception as e:
+        print("AGENT_ERROR_START")
+        print(f"Error: {str(e)}")
+        print("AGENT_ERROR_END")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+                `;
+
+                // Execute the agent script
+                const python = spawn('python3', ['-c', agentScript], {
+                    cwd: agentPath,
+                    stdio: ['pipe', 'pipe', 'pipe'],
+                    env: {
+                        ...process.env,
+                        PYTHONPATH: agentPath,
+                        OPIK_API_KEY: "FmS00BRumiIHn8w9Lm7STohfz",
+                        OPIK_WORKSPACE: "juan-dura"
+                    }
+                });
+
+                let output = '';
+                let errorOutput = '';
+
+                python.stdout.on('data', (data) => {
+                    output += data.toString();
+                });
+
+                python.stderr.on('data', (data) => {
+                    errorOutput += data.toString();
+                });
+
+                python.on('close', (code) => {
+                    console.log(`🐍 Python process exited with code: ${code}`);
+                    
+                    if (code === 0) {
+                        // Extract agent response
+                        const startMarker = 'AGENT_RESPONSE_START';
+                        const endMarker = 'AGENT_RESPONSE_END';
+                        const startIndex = output.indexOf(startMarker);
+                        const endIndex = output.indexOf(endMarker);
+                        
+                        if (startIndex !== -1 && endIndex !== -1) {
+                            const agentResponse = output.substring(
+                                startIndex + startMarker.length, 
+                                endIndex
+                            ).trim();
+                            
+                            console.log(`✅ AI Agent response: ${agentResponse.substring(0, 100)}...`);
+                            
+                            res.json({
+                                success: true,
+                                response: agentResponse,
+                                reasoning: 'Generated using Gemini 2.5 Pro with sports tools and user context',
+                                agent_used: true,
+                                user_context_applied: true
+                            });
+                        } else {
+                            // Check for agent error
+                            const errorStartMarker = 'AGENT_ERROR_START';
+                            const errorEndMarker = 'AGENT_ERROR_END';
+                            const errorStartIndex = output.indexOf(errorStartMarker);
+                            const errorEndIndex = output.indexOf(errorEndMarker);
+                            
+                            if (errorStartIndex !== -1 && errorEndIndex !== -1) {
+                                const agentError = output.substring(
+                                    errorStartIndex + errorStartMarker.length, 
+                                    errorEndIndex
+                                ).trim();
+                                
+                                console.error('❌ Agent reported error:', agentError);
+                                res.status(500).json({
+                                    success: false,
+                                    message: 'AI Agent reported an error',
+                                    error: agentError
+                                });
+                            } else {
+                                console.error('❌ Could not parse agent response:', output);
+                                res.status(500).json({
+                                    success: false,
+                                    message: 'Could not parse agent response',
+                                    raw_output: output,
+                                    stderr: errorOutput
+                                });
+                            }
+                        }
+                    } else {
+                        console.error('❌ AI Agent process failed with code:', code);
+                        console.error('❌ stderr:', errorOutput);
+                        console.error('❌ stdout:', output);
+                        
+                        res.status(500).json({
+                            success: false,
+                            message: 'AI Agent process failed',
+                            error: errorOutput || output,
+                            exit_code: code
+                        });
+                    }
+                });
+
+                python.on('error', (error) => {
+                    console.error('❌ Failed to start Python process:', error);
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'Failed to start AI Agent process',
+                            error: error.message
+                        });
+                    }
+                });
+
+                // Set timeout for agent response
+                const timeout = setTimeout(() => {
+                    if (!res.headersSent) {
+                        console.warn('⏰ AI Agent timeout - killing process');
+                        python.kill('SIGTERM');
+                        res.status(408).json({
+                            success: false,
+                            message: 'AI Agent timeout - response took too long'
+                        });
+                    }
+                }, 60000); // 60 second timeout (agents can be slow)
+                
+                // Clear timeout if response comes back in time
+                python.on('close', () => {
+                    clearTimeout(timeout);
+                });
+                
+            } catch (error) {
+                console.error('❌ AI Agent endpoint error:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'AI Agent error',
                     error: error.message
                 });
             }

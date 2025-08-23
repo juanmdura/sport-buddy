@@ -1,21 +1,15 @@
 {
   "userPreferences": {
     "selectedSports": [
-      "soccer"
+      "basketball"
     ],
-    "selectedTeams": [
-      {
-        "id": "133602",
-        "name": "Liverpool",
-        "sport": "Soccer"
-      }
-    ],
+    "selectedTeams": [],
     "selectedEvents": [],
     "selectedLeagues": [
       {
-        "id": "4328",
-        "name": "English Premier League",
-        "sport": "Soccer"
+        "id": "4831",
+        "name": "FIBA EuroBasket",
+        "sport": "Basketball"
       }
     ]
   },

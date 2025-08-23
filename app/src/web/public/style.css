@@ -72,6 +72,23 @@ body {
 .nav-right {
     display: flex;
     align-items: center;
+    gap: 1rem;
+    margin-left: auto; /* Pushes to the right */
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Aligns content within user-info to the right */
+    gap: 1rem;
+    color: white;
+    margin-left: auto; /* Ensures it stays right-aligned even if nav-right is not flex */
+    text-align: right; /* For text within user-info */
+}
+
+.user-name {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-link {

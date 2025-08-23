@@ -6,7 +6,7 @@
       "email": "demo@sportbuddy.com",
       "displayName": "Demo User",
       "createdAt": "2024-08-20T00:00:00.000Z",
-      "lastLogin": "2025-08-20T21:27:30.621Z"
+      "lastLogin": "2025-08-22T22:21:09.970Z"
     },
     "admin": {
       "username": "admin",
@@ -23,7 +23,7 @@
       "password": "123456",
       "newsletter": false,
       "createdAt": "2025-08-20T21:34:13.736Z",
-      "lastLogin": "2025-08-21T15:51:28.731Z",
+      "lastLogin": "2025-08-22T21:42:46.807Z",
       "emailVerified": false,
       "isActive": true
     },
@@ -74,6 +74,78 @@
       },
       "createdAt": "2025-08-21T15:51:28.732Z",
       "expiresAt": "2025-08-22T15:51:28.732Z",
+      "rememberMe": false
+    },
+    "9517820922112559342330e9dd4a7870bdd701c19af34c310e3ae327f64f601d": {
+      "userId": "demo",
+      "user": {
+        "username": "demo",
+        "email": "demo@sportbuddy.com",
+        "displayName": "Demo User",
+        "lastLogin": "2025-08-21T21:55:34.794Z"
+      },
+      "createdAt": "2025-08-21T21:55:34.795Z",
+      "expiresAt": "2025-08-22T21:55:34.795Z",
+      "rememberMe": false
+    },
+    "21dc63cb1b913a369cf07bfee03a04698d380485b10fc3c35b44dfbb6290b6df": {
+      "userId": "demo",
+      "user": {
+        "username": "demo",
+        "email": "demo@sportbuddy.com",
+        "displayName": "Demo User",
+        "lastLogin": "2025-08-21T21:56:22.537Z"
+      },
+      "createdAt": "2025-08-21T21:56:22.537Z",
+      "expiresAt": "2025-08-22T21:56:22.537Z",
+      "rememberMe": false
+    },
+    "d90c11a20992041ead2f7fe60b5a6b6b52770fa51a38e8e4f53dcb2b9d48c1b3": {
+      "userId": "demo",
+      "user": {
+        "username": "demo",
+        "email": "demo@sportbuddy.com",
+        "displayName": "Demo User",
+        "lastLogin": "2025-08-21T21:59:14.278Z"
+      },
+      "createdAt": "2025-08-21T21:59:14.279Z",
+      "expiresAt": "2025-08-22T21:59:14.279Z",
+      "rememberMe": false
+    },
+    "1d686d6592993f8f9f43bacc979ade2bb3cef3f8851797c6816e5ad8a68c942e": {
+      "userId": "juanmdura",
+      "user": {
+        "username": "juanmdura",
+        "email": "juanmdura@gmail.com",
+        "displayName": "Juan Dura",
+        "lastLogin": "2025-08-22T21:42:46.807Z"
+      },
+      "createdAt": "2025-08-22T21:42:46.809Z",
+      "expiresAt": "2025-08-23T21:42:46.809Z",
+      "rememberMe": false
+    },
+    "efaa352b0e0d27e7db08b928c2ec147e40e5cf4e0d47df99b456d469807a424a": {
+      "userId": "demo",
+      "user": {
+        "username": "demo",
+        "email": "demo@sportbuddy.com",
+        "displayName": "Demo User",
+        "lastLogin": "2025-08-22T21:58:30.767Z"
+      },
+      "createdAt": "2025-08-22T21:58:30.768Z",
+      "expiresAt": "2025-08-23T21:58:30.768Z",
+      "rememberMe": false
+    },
+    "d846469a5f23b28e0c5be6202b352082ad87916fec19bbb6c27e4aa799e157e9": {
+      "userId": "demo",
+      "user": {
+        "username": "demo",
+        "email": "demo@sportbuddy.com",
+        "displayName": "Demo User",
+        "lastLogin": "2025-08-22T22:21:09.970Z"
+      },
+      "createdAt": "2025-08-22T22:21:09.971Z",
+      "expiresAt": "2025-08-23T22:21:09.971Z",
       "rememberMe": false
     }
   }

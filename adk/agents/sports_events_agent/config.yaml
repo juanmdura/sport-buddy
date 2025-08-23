@@ -1,0 +1,112 @@
+# ADK Agent Config - Sports Events Agent
+# Following ADK best practices from https://google.github.io/adk-docs/
+
+name: "sports_events_agent"
+version: "1.0.0"
+description: "Sports assistant that helps users find information about sports teams, leagues, and events using real-time data from TheSportsDB API"
+
+# ADK Best Practice: Agent Configuration
+agent:
+  type: "LlmAgent"
+  model: "gemini-2.5-pro"
+  
+  # ADK Best Practice: Externalized instruction management
+  instruction_file: "prompt.py"
+  instruction_var: "AGENT_INSTRUCTIONS"
+  
+  # ADK Best Practice: Structured tool configuration
+  tools:
+    - type: "FunctionTool"
+      module: ".tools"
+      function: "search_teams"
+      name: "search_teams"
+      description: "Search for sports teams by name using TheSportsDB API. Returns detailed team information including league, sport, venue, and other metadata."
+      
+      # ADK Best Practice: Tool parameter validation
+      parameters:
+        team_name:
+          type: "string"
+          description: "The team name to search for (e.g., 'Arsenal', 'Lakers', 'Patriots')"
+          required: true
+          min_length: 1
+          max_length: 50
+
+# ADK Best Practice: Observability configuration
+observability:
+  enabled: true
+  providers:
+    - type: "opik"
+      api_key_env: "OPIK_API_KEY"
+      workspace_env: "OPIK_WORKSPACE"
+      trace_all_interactions: true
+      
+# ADK Best Practice: Session and memory configuration
+session:
+  type: "InMemorySession"
+  state_management: true
+  memory_enabled: true
+  max_session_duration_minutes: 30
+  
+# ADK Best Practice: Safety and Security
+safety:
+  input_validation: true
+  output_filtering: true
+  rate_limiting:
+    requests_per_minute: 30
+    requests_per_hour: 500
+  content_filtering:
+    block_inappropriate: true
+    
+# ADK Best Practice: Runtime configuration
+runtime:
+  max_iterations: 15
+  timeout_seconds: 45
+  response_modalities: ["TEXT"]
+  max_tool_calls_per_turn: 3
+  
+# ADK Best Practice: Error handling configuration
+error_handling:
+  retry_attempts: 2
+  graceful_degradation: true
+  fallback_responses: true
+  
+# ADK Best Practice: Evaluation and testing configuration
+evaluation:
+  test_cases:
+    - name: "team_search_arsenal"
+      input: "Tell me about Arsenal"
+      expected_tool_calls: ["search_teams"]
+      expected_parameters: {"team_name": "Arsenal"}
+      
+    - name: "team_search_lakers"
+      input: "What do you know about the Lakers?"
+      expected_tool_calls: ["search_teams"]
+      expected_parameters: {"team_name": "Lakers"}
+      
+    - name: "greeting_response"
+      input: "Hello"
+      expected_response_type: "greeting"
+      should_mention: ["sports", "team", "help"]
+      
+    - name: "multiple_teams"
+      input: "Find Manchester United and Arsenal"
+      expected_tool_calls: ["search_teams", "search_teams"]
+      
+    - name: "invalid_team"
+      input: "Tell me about XYZ123InvalidTeam"
+      expected_tool_calls: ["search_teams"]
+      should_handle_gracefully: true
+
+# ADK Best Practice: Performance monitoring
+performance:
+  track_response_times: true
+  track_tool_usage: true
+  track_success_rates: true
+  alert_on_high_error_rate: true
+  
+# ADK Best Practice: API rate limiting and quotas
+api_limits:
+  thesportsdb_api:
+    max_requests_per_minute: 20
+    retry_after_limit: 60
+    timeout_seconds: 10

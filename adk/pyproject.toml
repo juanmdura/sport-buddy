@@ -7,4 +7,5 @@ dependencies = [
     "google-adk",
     "google-cloud-aiplatform[agent-engine]>=1.106.0",
     "opik>=1.8.13",
+    "requests>=2.31.0",
 ]

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Events Chatbot | Sports Buddy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chatbot.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="chatbot-page">
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-nav">
+                <div class="nav-left">
+                    <div class="logo">
+                        <h1><i class="fas fa-robot"></i> Sports Events Buddy</h1>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-comments"></i>
+                        <h2>Ask me about sports events!</h2>
+                    </div>
+                    <div class="chat-status">
+                        <span id="agent-status" class="status-indicator">
+                            <i class="fas fa-circle"></i>
+                            <span>Ready</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message bot-message welcome-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>👋 Hi! I'm your Sports Events Assistant! I can help you with:</p>
+                            <ul>
+                                <li>🏆 Finding current sports events</li>
+                                <li>⚽ Searching by sport or league</li>
+                                <li>👥 Looking up teams</li>
+                                <li>📊 Getting sports summaries</li>
+                                <li>🎯 Showing your personalized events</li>
+                            </ul>
+                            <p>Try asking: <em>"What soccer events are happening?"</em> or <em>"Show me my sports preferences"</em></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <form id="chat-form" class="chat-form">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                id="user-input" 
+                                placeholder="Ask me about sports events..." 
+                                class="chat-input"
+                                autocomplete="off"
+                                required
+                            >
+                            <button type="submit" id="send-btn" class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" data-query="What sports events are happening?">
+                            <i class="fas fa-calendar"></i> Current Events
+                        </button>
+                        <button class="quick-action-btn" data-query="Show me soccer events">
+                            <i class="fas fa-futbol"></i> Soccer Events
+                        </button>
+                        <button class="quick-action-btn" data-query="What sports are available?">
+                            <i class="fas fa-list"></i> Available Sports
+                        </button>
+                        <button class="quick-action-btn" data-query="Show my preferences">
+                            <i class="fas fa-user-cog"></i> My Preferences
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Thinking...</p>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message" class="message-popup error-popup hidden">
+        <div class="popup-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error</h3>
+            <p id="error-text">Something went wrong</p>
+            <button id="close-error" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="chatbot.js?v=2.1"></script>
+</body>
+</html>
