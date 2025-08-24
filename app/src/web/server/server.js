@@ -655,9 +655,9 @@ async def main():
         
         print("AGENT_RESPONSE_START")
         
-        # Set environment
+        # Set environment - API key should be loaded from environment
         if not os.environ.get('GOOGLE_API_KEY'):
-            os.environ['GOOGLE_API_KEY'] = 'AIzaSyD4Hte33d85BriJG1JI5yDlO1HbE7JjQzM'
+            raise ValueError("GOOGLE_API_KEY environment variable is required")
         
         # Simulate user input via stdin (this method works reliably with ADK)
         user_message = "${escapedMessage}"
@@ -774,8 +774,8 @@ if __name__ == "__main__":
                     env: {
                         ...process.env,
                         PYTHONPATH: agentPath,
-                        OPIK_API_KEY: "FmS00BRumiIHn8w9Lm7STohfz",
-                        OPIK_WORKSPACE: "juan-dura"
+                        OPIK_API_KEY: process.env.OPIK_API_KEY,
+                        OPIK_WORKSPACE: process.env.OPIK_WORKSPACE
                     }
                 });
 

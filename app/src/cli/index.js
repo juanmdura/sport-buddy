@@ -2,7 +2,10 @@
 
 const SportsEventsAPI = require('../services/sports-api');
 const SportsEventsServer = require('../web/server/server');
-require('dotenv').config();
+const path = require('path');
+
+// Load environment variables from .env file in project root
+require('dotenv').config({ path: path.join(__dirname, '../../..', '.env') });
 
 /**
  * Main Sports Events System Application

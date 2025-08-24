@@ -23,7 +23,7 @@
       "password": "123456",
       "newsletter": false,
       "createdAt": "2025-08-20T21:34:13.736Z",
-      "lastLogin": "2025-08-22T21:42:46.807Z",
+      "lastLogin": "2025-08-24T09:06:53.815Z",
       "emailVerified": false,
       "isActive": true
     },
@@ -146,6 +146,18 @@
       },
       "createdAt": "2025-08-22T22:21:09.971Z",
       "expiresAt": "2025-08-23T22:21:09.971Z",
+      "rememberMe": false
+    },
+    "6a08fde4f290a699883641229cfefae3b976adfd874251fadb3d538cb1bc4569": {
+      "userId": "juanmdura",
+      "user": {
+        "username": "juanmdura",
+        "email": "juanmdura@gmail.com",
+        "displayName": "Juan Dura",
+        "lastLogin": "2025-08-24T09:06:53.815Z"
+      },
+      "createdAt": "2025-08-24T09:06:53.819Z",
+      "expiresAt": "2025-08-25T09:06:53.819Z",
       "rememberMe": false
     }
   }
